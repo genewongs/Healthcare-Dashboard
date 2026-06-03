@@ -53,6 +53,10 @@ function formatDate(date: string | null) {
   }).format(new Date(date));
 }
 
+function formatAllergies(allergies: string[]) {
+  return allergies.length > 0 ? allergies.join(", ") : "None documented";
+}
+
 function FieldValue({ label, value }: { label: string; value: string | null }) {
   return (
     <Box>
@@ -191,7 +195,7 @@ export function PatientDetailPage() {
       <PatientSection title="Medical Information">
         <FieldValue label="Blood type" value={patient.blood_type} />
         <FieldValue label="Conditions" value={patient.conditions} />
-        <FieldValue label="Allergies" value={patient.allergies} />
+        <FieldValue label="Allergies" value={formatAllergies(patient.allergies)} />
         <FieldValue label="Last visit" value={formatDate(patient.last_visit)} />
       </PatientSection>
 

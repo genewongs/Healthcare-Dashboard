@@ -134,7 +134,7 @@ def get_patient_summary(id: int, db: Session = Depends(get_db)) -> PatientSummar
     age_text = f"{age} years old" if age is not None else "age not recorded"
     blood_type = patient.blood_type or "not recorded"
     conditions = patient.conditions or "none documented"
-    allergies = patient.allergies or "none documented"
+    allergies = ", ".join(patient.allergies) if patient.allergies else "none documented"
     notes_narrative = build_notes_narrative(notes)
 
     # gwong: todo - we could utilize an LLM here to make the natural language better. 

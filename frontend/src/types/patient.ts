@@ -1,4 +1,5 @@
 export type PatientStatus = "active" | "inactive" | "pending" | "discharged";
+export type BloodType = "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-";
 
 export type PatientSortField =
   | "id"
@@ -20,11 +21,11 @@ export type Patient = {
   phone: string | null;
   email: string | null;
   address: string | null;
-  blood_type: string | null;
-  allergies: string | null;
+  blood_type: BloodType | null;
+  allergies: string[];
   conditions: string | null;
   status: PatientStatus;
-  last_visit: string | null;
+  last_visit: string;
   created_at: string;
   updated_at: string;
 };
@@ -36,14 +37,14 @@ export type PatientCreate = {
   phone?: string | null;
   email?: string | null;
   address?: string | null;
-  blood_type?: string | null;
-  allergies?: string | null;
+  blood_type?: BloodType | null;
+  allergies?: string[];
   conditions?: string | null;
-  status?: PatientStatus;
-  last_visit?: string | null;
+  status: PatientStatus;
+  last_visit: string;
 };
 
-export type PatientUpdate = Partial<PatientCreate>;
+export type PatientUpdate = PatientCreate;
 
 export type PatientListParams = {
   page?: number;
@@ -79,4 +80,3 @@ export type PatientSummary = {
   patient_id: number;
   summary: string;
 };
-

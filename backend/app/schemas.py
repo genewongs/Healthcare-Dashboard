@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 
 PatientStatus = Literal["active", "inactive", "pending", "discharged"]
+BloodType = Literal["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]
 
 
 class PatientBase(BaseModel):
@@ -14,29 +15,41 @@ class PatientBase(BaseModel):
     phone: str | None = None
     email: EmailStr | None = None
     address: str | None = None
-    blood_type: str | None = None
-    allergies: str | None = None
+    blood_type: BloodType | None = None
+    allergies: list[str] = Field(default_factory=list)
     conditions: str | None = None
-    status: PatientStatus = "active"
-    last_visit: date | None = None
+    status: PatientStatus
+    last_visit: date
+
+    @field_validator("first_name", "last_name")
+    @classmethod
+    def required_text_must_not_be_blank(cls, value: str) -> str:
+        cleaned_value = value.strip()
+        if not cleaned_value:
+            raise ValueError("This field is required")
+        return cleaned_value
+
+    @field_validator("allergies")
+    @classmethod
+    def allergies_must_be_clean(cls, value: list[str]) -> list[str]:
+        return [allergy.strip() for allergy in value if allergy.strip()]
+
+    @field_validator("phone", "address", "conditions")
+    @classmethod
+    def optional_text_must_be_clean(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+
+        cleaned_value = value.strip()
+        return cleaned_value or None
 
 
 class PatientCreate(PatientBase):
     pass
 
 
-class PatientUpdate(BaseModel):
-    first_name: str | None = Field(default=None, min_length=1)
-    last_name: str | None = Field(default=None, min_length=1)
-    date_of_birth: date | None = None
-    phone: str | None = None
-    email: EmailStr | None = None
-    address: str | None = None
-    blood_type: str | None = None
-    allergies: str | None = None
-    conditions: str | None = None
-    status: PatientStatus | None = None
-    last_visit: date | None = None
+class PatientUpdate(PatientBase):
+    pass
 
 
 class PatientResponse(PatientBase):

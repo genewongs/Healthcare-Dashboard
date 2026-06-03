@@ -4,6 +4,7 @@ import {
   Button,
   Card,
   CardContent,
+  Chip,
   FormControl,
   FormHelperText,
   InputLabel,
@@ -14,11 +15,13 @@ import {
   Typography,
 } from "@mui/material";
 import { Controller, useForm } from "react-hook-form";
+import { useState, type KeyboardEvent } from "react";
 import { z } from "zod";
-import type { Patient, PatientStatus } from "../../types/patient";
+import type { BloodType, Patient, PatientStatus } from "../../types/patient";
 import { formatPatientStatusLabel } from "./PatientStatusChip";
 
 const patientStatuses: PatientStatus[] = ["active", "inactive", "pending", "discharged"];
+const bloodTypes: BloodType[] = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
 const optionalText = z.string().trim();
 
@@ -32,6 +35,11 @@ const optionalDate = z.string().refine(
   "Enter a valid date",
 );
 
+const requiredDate = z.string().trim().min(1, "Last visit is required").refine(
+  (value) => !Number.isNaN(Date.parse(value)),
+  "Enter a valid date",
+);
+
 const patientFormSchema = z.object({
   first_name: z.string().trim().min(1, "First name is required"),
   last_name: z.string().trim().min(1, "Last name is required"),
@@ -39,11 +47,11 @@ const patientFormSchema = z.object({
   phone: optionalText,
   email: optionalEmail,
   address: optionalText,
-  blood_type: optionalText,
-  allergies: optionalText,
+  blood_type: z.enum(bloodTypes, "Select a valid blood type").or(z.literal("")),
+  allergies: z.array(z.string().trim().min(1, "Allergy cannot be empty")),
   conditions: optionalText,
   status: z.enum(patientStatuses, "Select a valid status"),
-  last_visit: optionalDate,
+  last_visit: requiredDate,
 });
 
 export type PatientFormValues = z.infer<typeof patientFormSchema>;
@@ -55,7 +63,6 @@ export type PatientFormSubmitValues = Omit<
   | "email"
   | "address"
   | "blood_type"
-  | "allergies"
   | "conditions"
   | "last_visit"
 > & {
@@ -63,10 +70,9 @@ export type PatientFormSubmitValues = Omit<
   phone: string | null;
   email: string | null;
   address: string | null;
-  blood_type: string | null;
-  allergies: string | null;
+  blood_type: BloodType | null;
   conditions: string | null;
-  last_visit: string | null;
+  last_visit: string;
 };
 
 export type PatientFormServerErrors = Partial<Record<keyof PatientFormValues, string>>;
@@ -89,7 +95,7 @@ const emptyValues: PatientFormValues = {
   email: "",
   address: "",
   blood_type: "",
-  allergies: "",
+  allergies: [],
   conditions: "",
   status: "active",
   last_visit: "",
@@ -104,7 +110,7 @@ function toFormValues(values?: Patient | Partial<PatientFormValues>): PatientFor
     email: values?.email ?? "",
     address: values?.address ?? "",
     blood_type: values?.blood_type ?? "",
-    allergies: values?.allergies ?? "",
+    allergies: values?.allergies ?? [],
     conditions: values?.conditions ?? "",
     last_visit: values?.last_visit ?? "",
     status: values?.status ?? "active",
@@ -123,6 +129,112 @@ function emptyToNull(value: string) {
   return trimmedValue === "" ? null : trimmedValue;
 }
 
+function AllergiesInput({
+  error,
+  onChange,
+  value,
+}: {
+  error?: string;
+  onChange: (value: string[]) => void;
+  value: string[];
+}) {
+  const [inputValue, setInputValue] = useState("");
+
+  const addAllergies = (rawValue: string) => {
+    const newAllergies = rawValue
+      .split(",")
+      .map((allergy) => allergy.trim())
+      .filter(Boolean);
+
+    if (newAllergies.length > 0) {
+      onChange([...value, ...newAllergies]);
+    }
+  };
+
+  const handleInputChange = (nextValue: string) => {
+    if (!nextValue.includes(",")) {
+      setInputValue(nextValue);
+      return;
+    }
+
+    const parts = nextValue.split(",");
+    addAllergies(parts.slice(0, -1).join(","));
+    setInputValue(parts[parts.length - 1] ?? "");
+  };
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== "Enter") {
+      return;
+    }
+
+    event.preventDefault();
+    addAllergies(inputValue);
+    setInputValue("");
+  };
+
+  const removeAllergy = (indexToRemove: number) => {
+    onChange(value.filter((_, index) => index !== indexToRemove));
+  };
+
+  return (
+    <Stack spacing={1}>
+      <TextField
+        error={Boolean(error)}
+        fullWidth
+        helperText={error || " "}
+        label="Allergies"
+        onBlur={() => {
+          addAllergies(inputValue);
+          setInputValue("");
+        }}
+        onChange={(event) => handleInputChange(event.target.value)}
+        onKeyDown={handleKeyDown}
+        placeholder="Separate allergies with commas"
+        slotProps={{
+          input: {
+            startAdornment:
+              value.length > 0 ? (
+                <Stack
+                  direction="row"
+                  spacing={0.75}
+                  sx={{
+                    flexWrap: "wrap",
+                    maxWidth: "100%",
+                    rowGap: 0.75,
+                    marginTop: 1,
+                  }}
+                >
+                  {value.map((allergy, index) => (
+                    <Chip
+                      color="primary"
+                      key={`${allergy}-${index}`}
+                      label={allergy}
+                      onDelete={() => removeAllergy(index)}
+                      // size="small"
+                      // sx={{marginTop: 34, backgroundColor: 'red'}}
+                    />
+                  ))}
+                </Stack>
+              ) : null,
+            sx: {
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 0.75,
+              minHeight: 44,
+              py: value.length > 0 ? 0.75 : undefined,
+              "& .MuiInputBase-input": {
+                flexGrow: 1,
+                minWidth: 180,
+              },
+            },
+          },
+        }}
+        value={inputValue}
+      />
+    </Stack>
+  );
+}
+
 function toSubmitValues(values: PatientFormValues): PatientFormSubmitValues {
   return {
     ...values,
@@ -132,10 +244,10 @@ function toSubmitValues(values: PatientFormValues): PatientFormSubmitValues {
     phone: emptyToNull(values.phone),
     email: emptyToNull(values.email),
     address: emptyToNull(values.address),
-    blood_type: emptyToNull(values.blood_type),
-    allergies: emptyToNull(values.allergies),
+    blood_type: values.blood_type === "" ? null : values.blood_type,
+    allergies: values.allergies,
     conditions: emptyToNull(values.conditions),
-    last_visit: emptyToNull(values.last_visit),
+    last_visit: values.last_visit,
   };
 }
 
@@ -236,6 +348,28 @@ export function PatientForm({
                   />
                 )}
               />
+              <Controller
+                control={control}
+                name="status"
+                render={({ field }) => (
+                  <FormControl
+                    error={Boolean(fieldError(errors.status?.message, serverFieldErrors.status))}
+                    fullWidth
+                  >
+                    <InputLabel id="patient-status-label">Status</InputLabel>
+                    <Select label="Status" labelId="patient-status-label" {...field}>
+                      {patientStatuses.map((status) => (
+                        <MenuItem key={status} value={status}>
+                          {formatPatientStatusLabel(status)}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                    <FormHelperText>
+                      {fieldError(errors.status?.message, serverFieldErrors.status)}
+                    </FormHelperText>
+                  </FormControl>
+                )}
+              />
             </Stack>
 
             <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
@@ -269,45 +403,43 @@ export function PatientForm({
           <Stack spacing={2}>
             <Typography variant="h6">Medical Information</Typography>
             <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-              <TextField
-                {...register("blood_type")}
-                error={Boolean(fieldError(errors.blood_type?.message, serverFieldErrors.blood_type))}
-                fullWidth
-                helperText={fieldError(errors.blood_type?.message, serverFieldErrors.blood_type)}
-                label="Blood type"
-              />
               <Controller
                 control={control}
-                name="status"
+                name="blood_type"
                 render={({ field }) => (
                   <FormControl
-                    error={Boolean(fieldError(errors.status?.message, serverFieldErrors.status))}
+                    error={Boolean(
+                      fieldError(errors.blood_type?.message, serverFieldErrors.blood_type),
+                    )}
                     fullWidth
                   >
-                    <InputLabel id="patient-status-label">Status</InputLabel>
-                    <Select label="Status" labelId="patient-status-label" {...field}>
-                      {patientStatuses.map((status) => (
-                        <MenuItem key={status} value={status}>
-                          {formatPatientStatusLabel(status)}
+                    <InputLabel id="patient-blood-type-label">Blood type</InputLabel>
+                    <Select label="Blood type" labelId="patient-blood-type-label" {...field}>
+                      <MenuItem value="">Not recorded</MenuItem>
+                      {bloodTypes.map((bloodType) => (
+                        <MenuItem key={bloodType} value={bloodType}>
+                          {bloodType}
                         </MenuItem>
                       ))}
                     </Select>
                     <FormHelperText>
-                      {fieldError(errors.status?.message, serverFieldErrors.status)}
+                      {fieldError(errors.blood_type?.message, serverFieldErrors.blood_type)}
                     </FormHelperText>
                   </FormControl>
                 )}
               />
             </Stack>
 
-            <TextField
-              {...register("allergies")}
-              error={Boolean(fieldError(errors.allergies?.message, serverFieldErrors.allergies))}
-              fullWidth
-              helperText={fieldError(errors.allergies?.message, serverFieldErrors.allergies)}
-              label="Allergies"
-              minRows={2}
-              multiline
+            <Controller
+              control={control}
+              name="allergies"
+              render={({ field }) => (
+                <AllergiesInput
+                  error={fieldError(errors.allergies?.message, serverFieldErrors.allergies)}
+                  onChange={field.onChange}
+                  value={field.value}
+                />
+              )}
             />
             <TextField
               {...register("conditions")}
