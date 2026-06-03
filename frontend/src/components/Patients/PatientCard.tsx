@@ -2,12 +2,12 @@ import {
   Card,
   CardActionArea,
   CardContent,
-  Chip,
   Stack,
   Typography,
 } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import type { Patient } from "../../types/patient";
+import { PatientStatusChip } from "./PatientStatusChip";
 
 type PatientCardProps = {
   patient: Patient;
@@ -74,7 +74,7 @@ export function PatientCard({ patient }: PatientCardProps) {
               <Typography color="text.secondary" variant="body2">
                 Last visit: {formatDate(patient.last_visit)}
               </Typography>
-              <Chip label={patient.status} size="small" />
+              <PatientStatusChip status={patient.status} />
             </Stack>
           </Stack>
         </CardContent>

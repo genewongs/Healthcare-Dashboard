@@ -1,7 +1,8 @@
-import { Alert, Button, Stack, Typography } from "@mui/material";
+import { Alert, Stack, Typography } from "@mui/material";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { createPatient } from "../api/patients";
+import { CircularBackButton } from "../components/Layout";
 import { PatientForm, type PatientFormSubmitValues } from "../components/Patients";
 import {
   getPatientFormServerError,
@@ -27,10 +28,10 @@ export function CreatePatientPage() {
   return (
     <Stack spacing={3}>
       <Stack spacing={1}>
-        <Button component={RouterLink} to="/patients" variant="text">
-          Back to patients
-        </Button>
-        <Typography variant="h4">Create Patient</Typography>
+        <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
+          <CircularBackButton ariaLabel="Back to patients" to="/patients" />
+          <Typography variant="h4">Create Patient</Typography>
+        </Stack>
         <Typography color="text.secondary" variant="body1">
           Add a new patient record.
         </Typography>

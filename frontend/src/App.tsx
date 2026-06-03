@@ -5,7 +5,7 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { EditPatientPage } from "./pages/EditPatientPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { PatientDetailPage } from "./pages/PatientDetailPage";
-import { PatientsPage } from "./pages/PatientsPage";
+import { PatientsList } from "./pages/PatientsList";
 import "./styles.css";
 
 function App() {
@@ -13,7 +13,7 @@ function App() {
     <Routes>
       <Route element={<AppLayout />}>
         <Route path="/" element={<DashboardPage />} />
-        <Route path="/patients" element={<PatientsPage />} />
+        <Route path="/patients" element={<PatientsList />} />
         <Route path="/patients/new" element={<CreatePatientPage />} />
         <Route path="/patients/:id/edit" element={<EditPatientPage />} />
         <Route path="/patients/:id" element={<PatientDetailPage />} />

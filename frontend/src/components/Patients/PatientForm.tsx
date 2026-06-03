@@ -16,6 +16,7 @@ import {
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import type { Patient, PatientStatus } from "../../types/patient";
+import { formatPatientStatusLabel } from "./PatientStatusChip";
 
 const patientStatuses: PatientStatus[] = ["active", "inactive", "pending", "discharged"];
 
@@ -287,7 +288,7 @@ export function PatientForm({
                     <Select label="Status" labelId="patient-status-label" {...field}>
                       {patientStatuses.map((status) => (
                         <MenuItem key={status} value={status}>
-                          {status}
+                          {formatPatientStatusLabel(status)}
                         </MenuItem>
                       ))}
                     </Select>

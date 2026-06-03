@@ -2,17 +2,17 @@ import {
   Alert,
   Box,
   Button,
-  CircularProgress,
   FormControl,
   InputLabel,
   MenuItem,
   Pagination,
   Select,
+  Skeleton,
   Stack,
   TextField,
   Typography,
 } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { getPatients } from "../api/patients";
@@ -39,7 +39,7 @@ const sortOptions: Array<{ label: string; value: PatientSortField }> = [
 
 const pageSizeOptions = [5, 10, 25, 50];
 
-export function PatientsPage() {
+export function PatientsList() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [search, setSearch] = useState("");
@@ -69,6 +69,7 @@ export function PatientsPage() {
   const { data, error, isError, isFetching, isLoading } = useQuery({
     queryKey: ["patients", queryParams],
     queryFn: () => getPatients(queryParams),
+    placeholderData: keepPreviousData,
   });
 
   const handleStatusChange = (nextStatus: StatusFilter) => {
@@ -95,9 +96,7 @@ export function PatientsPage() {
     return (
       <Stack spacing={3}>
         <PatientsHeader />
-        <Box sx={{ alignItems: "center", display: "flex", minHeight: 240 }}>
-          <CircularProgress aria-label="Loading patients" />
-        </Box>
+        <PatientListSkeleton />
       </Stack>
     );
   }
@@ -186,21 +185,25 @@ export function PatientsPage() {
         </FormControl>
       </Stack>
 
-      {isFetching && !isLoading ? (
-        <Typography color="text.secondary" variant="body2">
-          Updating patients...
-        </Typography>
-      ) : null}
-
-      {patients.length === 0 ? (
-        <Alert severity="info">No patients found.</Alert>
-      ) : (
-        <Stack spacing={2}>
-          {patients.map((patient) => (
-            <PatientCard key={patient.id} patient={patient} />
-          ))}
-        </Stack>
-      )}
+      <Box sx={{ minHeight: 260, position: "relative" }}>
+        <Box
+          sx={{
+            opacity: isFetching ? 0.72 : 1,
+            transform: isFetching ? "translateY(2px)" : "translateY(0)",
+            transition: "opacity 180ms ease, transform 180ms ease",
+          }}
+        >
+          {patients.length === 0 ? (
+            <Alert severity="info">No patients found.</Alert>
+          ) : (
+            <Stack spacing={2}>
+              {patients.map((patient) => (
+                <PatientCard key={patient.id} patient={patient} />
+              ))}
+            </Stack>
+          )}
+        </Box>
+      </Box>
 
       {totalPages > 1 ? (
         <Stack
@@ -219,6 +222,46 @@ export function PatientsPage() {
           />
         </Stack>
       ) : null}
+    </Stack>
+  );
+}
+
+function PatientListSkeleton() {
+  return (
+    <Stack spacing={2} aria-label="Loading patients">
+      {Array.from({ length: 5 }).map((_, index) => (
+        <Box
+          key={index}
+          sx={{
+            border: 1,
+            borderColor: "divider",
+            borderRadius: 1,
+            p: 2,
+          }}
+        >
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={2}
+            sx={{
+              alignItems: { xs: "stretch", sm: "center" },
+              justifyContent: "space-between",
+            }}
+          >
+            <Stack spacing={1}>
+              <Skeleton height={28} width={220} />
+              <Skeleton height={20} width={80} />
+            </Stack>
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={2}
+              sx={{ alignItems: { xs: "stretch", sm: "center" } }}
+            >
+              <Skeleton height={20} width={150} />
+              <Skeleton height={24} sx={{ borderRadius: 8 }} width={86} />
+            </Stack>
+          </Stack>
+        </Box>
+      ))}
     </Stack>
   );
 }

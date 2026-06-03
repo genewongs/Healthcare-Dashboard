@@ -4,7 +4,6 @@ import {
   Button,
   Card,
   CardContent,
-  Chip,
   CircularProgress,
   Dialog,
   DialogActions,
@@ -19,7 +18,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 import { deletePatient, getPatientById } from "../api/patients";
-import { PatientNotes, PatientSummaryCard } from "../components/Patients";
+import { CircularBackButton } from "../components/Layout";
+import { PatientNotes, PatientStatusChip, PatientSummaryCard } from "../components/Patients";
 import type { Patient } from "../types/patient";
 
 function calculateAge(dateOfBirth: string | null) {
@@ -159,12 +159,10 @@ export function PatientDetailPage() {
         sx={{ alignItems: { xs: "flex-start", sm: "center" }, justifyContent: "space-between" }}
       >
         <Stack spacing={1}>
-          <Button component={RouterLink} to="/patients" variant="text">
-            Back to patients
-          </Button>
-          <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap" }}>
+          <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", flexWrap: "wrap" }}>
+            <CircularBackButton ariaLabel="Back to patients" to="/patients" />
             <Typography variant="h4">{fullName}</Typography>
-            <Chip label={patient.status} size="small" />
+            <PatientStatusChip status={patient.status} />
           </Stack>
         </Stack>
 

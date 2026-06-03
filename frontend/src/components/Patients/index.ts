@@ -7,4 +7,5 @@ export {
   type PatientFormValues,
 } from "./PatientForm";
 export { PatientNotes } from "./PatientNotes";
+export { formatPatientStatusLabel, PatientStatusChip } from "./PatientStatusChip";
 export { PatientSummaryCard } from "./PatientSummaryCard";

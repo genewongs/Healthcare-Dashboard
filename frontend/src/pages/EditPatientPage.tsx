@@ -2,6 +2,7 @@ import { Alert, Box, Button, CircularProgress, Stack, Typography } from "@mui/ma
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 import { getPatientById, updatePatient } from "../api/patients";
+import { CircularBackButton } from "../components/Layout";
 import { PatientForm, type PatientFormSubmitValues } from "../components/Patients";
 import {
   getPatientFormServerError,
@@ -70,10 +71,12 @@ export function EditPatientPage() {
   return (
     <Stack spacing={3}>
       <Stack spacing={1}>
-        <Button component={RouterLink} to={`/patients/${patient.id}`} variant="text">
-          Back to patient
-        </Button>
-        <Typography variant="h4">Edit Patient</Typography>
+        <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", flexWrap: "wrap" }}>
+          <CircularBackButton ariaLabel="Back to patient" to={`/patients/${patient.id}`} />
+          <Typography variant="h4">
+            Edit {patient.first_name} {patient.last_name}
+          </Typography>
+        </Stack>
         <Typography color="text.secondary" variant="body1">
           Update {patient.first_name} {patient.last_name}'s patient record.
         </Typography>
