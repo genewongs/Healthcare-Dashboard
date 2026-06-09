@@ -6,9 +6,22 @@ import type {
   PatientListParams,
   PatientNote,
   PatientNoteCreate,
+  PatientNoteUpdate,
   PatientSummary,
   PatientUpdate,
 } from "../types/patient";
+
+type PatientNoteApi = Omit<PatientNote, "isPinned"> & {
+  is_pinned: boolean;
+};
+
+function toPatientNote(note: PatientNoteApi): PatientNote {
+  const { is_pinned, ...rest } = note;
+  return {
+    ...rest,
+    isPinned: is_pinned,
+  };
+}
 
 export function getPatients(params: PatientListParams = {}) {
   return apiRequest<PaginatedPatients>("/patients", { query: params });
@@ -39,14 +52,34 @@ export function deletePatient(id: number) {
 }
 
 export function getPatientNotes(patientId: number) {
-  return apiRequest<PatientNote[]>(`/patients/${patientId}/notes`);
+  return apiRequest<PatientNoteApi[]>(`/patients/${patientId}/notes`).then((notes) =>
+    notes.map(toPatientNote),
+  );
 }
 
 export function addPatientNote(patientId: number, note: PatientNoteCreate) {
-  return apiRequest<PatientNote>(`/patients/${patientId}/notes`, {
+  return apiRequest<PatientNoteApi>(`/patients/${patientId}/notes`, {
     method: "POST",
-    body: note,
-  });
+    body: {
+      content: note.content,
+      category: note.category,
+      is_pinned: note.isPinned,
+      timestamp: note.timestamp,
+    },
+  }).then(toPatientNote);
+}
+
+export function updatePatientNote(
+  patientId: number,
+  noteId: number,
+  note: PatientNoteUpdate,
+) {
+  return apiRequest<PatientNoteApi>(`/patients/${patientId}/notes/${noteId}`, {
+    method: "PATCH",
+    body: {
+      is_pinned: note.isPinned,
+    },
+  }).then(toPatientNote);
 }
 
 export function deletePatientNote(patientId: number, noteId: number) {
@@ -58,4 +91,3 @@ export function deletePatientNote(patientId: number, noteId: number) {
 export function getPatientSummary(patientId: number) {
   return apiRequest<PatientSummary>(`/patients/${patientId}/summary`);
 }
-

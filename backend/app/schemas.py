@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 PatientStatus = Literal["active", "inactive", "pending", "discharged"]
 BloodType = Literal["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]
+PatientNoteCategory = Literal["general", "medication", "follow_up", "concern"]
 
 
 class PatientBase(BaseModel):
@@ -71,6 +72,8 @@ class PatientListResponse(BaseModel):
 class PatientNoteCreate(BaseModel):
     timestamp: datetime | None = None
     content: str = Field(min_length=1)
+    category: PatientNoteCategory = "general"
+    is_pinned: bool = False
 
     @field_validator("content")
     @classmethod
@@ -81,11 +84,17 @@ class PatientNoteCreate(BaseModel):
         return content
 
 
+class PatientNoteUpdate(BaseModel):
+    is_pinned: bool | None = None
+
+
 class PatientNoteResponse(BaseModel):
     id: int
     patient_id: int
     timestamp: datetime
     content: str
+    category: PatientNoteCategory
+    is_pinned: bool
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

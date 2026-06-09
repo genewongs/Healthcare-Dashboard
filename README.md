@@ -86,7 +86,8 @@ Patient list query parameters:
 Patient notes:
 
 - `GET /patients/{id}/notes`
-- `POST /patients/{id}/notes`
+- `POST /patients/{id}/notes` - create a note with `content`, `category`, and `is_pinned`
+- `PATCH /patients/{id}/notes/{note_id}` - update note pinned state
 - `DELETE /patients/{id}/notes/{note_id}`
 
 Patient summary:
@@ -126,4 +127,3 @@ This keeps local setup fast and predictable while avoiding duplicate records acr
 - File uploads
 - Role-based access controls
 - Stretch goals beyond the core assessment
-

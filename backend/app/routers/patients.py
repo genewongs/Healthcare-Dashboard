@@ -13,6 +13,7 @@ from app.schemas import (
     PatientListResponse,
     PatientNoteCreate,
     PatientNoteResponse,
+    PatientNoteUpdate,
     PatientResponse,
     PatientStatus,
     PatientSummaryResponse,
@@ -188,9 +189,43 @@ def list_patient_notes(id: int, db: Session = Depends(get_db)) -> list[PatientNo
     return (
         db.query(PatientNote)
         .filter(PatientNote.patient_id == id)
-        .order_by(PatientNote.timestamp.desc(), PatientNote.id.desc())
+        .order_by(PatientNote.is_pinned.desc(), PatientNote.timestamp.desc(), PatientNote.id.desc())
         .all()
     )
+
+
+@router.patch("/{id}/notes/{note_id}", response_model=PatientNoteResponse)
+def update_patient_note(
+    id: int,
+    note_id: int,
+    note_data: PatientNoteUpdate,
+    db: Session = Depends(get_db),
+) -> PatientNote:
+    patient = db.get(Patient, id)
+    if patient is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Patient not found",
+        )
+
+    note = (
+        db.query(PatientNote)
+        .filter(PatientNote.id == note_id, PatientNote.patient_id == id)
+        .first()
+    )
+    if note is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Note not found",
+        )
+
+    update_data = note_data.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(note, field, value)
+
+    db.commit()
+    db.refresh(note)
+    return note
 
 
 @router.delete("/{id}/notes/{note_id}", status_code=status.HTTP_204_NO_CONTENT)

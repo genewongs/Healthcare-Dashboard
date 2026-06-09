@@ -83,7 +83,7 @@ function PatientSection({
           <Divider />
           <Stack
             direction={{ xs: "column", md: "row" }}
-            spacing={3}
+            spacing={5}
             sx={{ alignItems: "flex-start", flexWrap: "wrap" }}
           >
             {children}

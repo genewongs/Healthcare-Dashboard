@@ -4,6 +4,7 @@ import {
   Button,
   Card,
   CardContent,
+  Chip,
   CircularProgress,
   Dialog,
   DialogActions,
@@ -11,22 +12,37 @@ import {
   DialogContentText,
   DialogTitle,
   Divider,
+  FormControl,
+  FormControlLabel,
+  InputLabel,
+  MenuItem,
+  Select,
   Stack,
+  Switch,
   TextField,
   Typography,
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { IoFlag, IoFlagOutline } from "react-icons/io5";
 import {
   addPatientNote,
   deletePatientNote,
   getPatientNotes,
+  updatePatientNote,
 } from "../../api/patients";
-import type { PatientNote } from "../../types/patient";
+import type { PatientNote, PatientNoteCategory } from "../../types/patient";
 
 type PatientNotesProps = {
   patientId: number;
 };
+
+const noteCategories: Array<{ label: string; value: PatientNoteCategory }> = [
+  { label: "General", value: "general" },
+  { label: "Medication", value: "medication" },
+  { label: "Follow-up", value: "follow_up" },
+  { label: "Concern", value: "concern" },
+];
 
 function formatTimestamp(timestamp: string) {
   return new Intl.DateTimeFormat("en-US", {
@@ -35,9 +51,15 @@ function formatTimestamp(timestamp: string) {
   }).format(new Date(timestamp));
 }
 
+function formatCategoryLabel(category: PatientNoteCategory) {
+  return noteCategories.find((option) => option.value === category)?.label ?? "General";
+}
+
 export function PatientNotes({ patientId }: PatientNotesProps) {
   const [content, setContent] = useState("");
+  const [category, setCategory] = useState<PatientNoteCategory>("general");
   const [contentError, setContentError] = useState("");
+  const [isPinned, setIsPinned] = useState(false);
   const [noteToDelete, setNoteToDelete] = useState<PatientNote | null>(null);
   const queryClient = useQueryClient();
   const notesQueryKey = ["patient-notes", patientId];
@@ -53,10 +75,25 @@ export function PatientNotes({ patientId }: PatientNotesProps) {
   });
 
   const addNoteMutation = useMutation({
-    mutationFn: (noteContent: string) => addPatientNote(patientId, { content: noteContent }),
+    mutationFn: (noteContent: string) =>
+      addPatientNote(patientId, {
+        content: noteContent,
+        category,
+        isPinned,
+      }),
     onSuccess: () => {
       setContent("");
       setContentError("");
+      setCategory("general");
+      setIsPinned(false);
+      queryClient.invalidateQueries({ queryKey: notesQueryKey });
+    },
+  });
+
+  const updateNoteMutation = useMutation({
+    mutationFn: (note: PatientNote) =>
+      updatePatientNote(patientId, note.id, { isPinned: !note.isPinned }),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: notesQueryKey });
     },
   });
@@ -108,7 +145,37 @@ export function PatientNotes({ patientId }: PatientNotesProps) {
               }}
               value={content}
             />
-            <Box>
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={2}
+              sx={{ alignItems: { xs: "stretch", sm: "center" } }}
+            >
+              <FormControl size="small" sx={{ minWidth: 180 }}>
+                <InputLabel id="note-category-label">Category</InputLabel>
+                <Select
+                  label="Category"
+                  labelId="note-category-label"
+                  onChange={(event) =>
+                    setCategory(event.target.value as PatientNoteCategory)
+                  }
+                  value={category}
+                >
+                  {noteCategories.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={isPinned}
+                    onChange={(event) => setIsPinned(event.target.checked)}
+                  />
+                }
+                label="Pin note"
+              />
               <Button
                 disabled={addNoteMutation.isPending}
                 onClick={handleAddNote}
@@ -116,7 +183,7 @@ export function PatientNotes({ patientId }: PatientNotesProps) {
               >
                 {addNoteMutation.isPending ? "Adding..." : "Add note"}
               </Button>
-            </Box>
+            </Stack>
             {addNoteMutation.isError ? (
               <Alert severity="error">Unable to add note. Please try again.</Alert>
             ) : null}
@@ -145,24 +212,54 @@ export function PatientNotes({ patientId }: PatientNotesProps) {
                       <Stack
                         direction={{ xs: "column", sm: "row" }}
                         spacing={1}
-                        sx={{
-                          alignItems: { xs: "flex-start", sm: "center" },
-                          justifyContent: "space-between",
-                        }}
-                      >
-                        <Typography color="text.secondary" variant="body2">
-                          {formatTimestamp(note.timestamp)}
-                        </Typography>
-                        <Button
-                          color="error"
-                          onClick={() => setNoteToDelete(note)}
-                          size="small"
-                          variant="text"
-                        >
-                          Delete
-                        </Button>
-                      </Stack>
-                      <Typography variant="body1">{note.content}</Typography>
+	                        sx={{
+	                          alignItems: { xs: "flex-start", sm: "center" },
+	                          justifyContent: "space-between",
+	                        }}
+	                      >
+	                        <Stack
+	                          direction="row"
+	                          spacing={1}
+	                          sx={{ alignItems: "center", flexWrap: "wrap" }}
+	                        >
+	                          {note.isPinned ? (
+	                            <Chip
+	                              color="warning"
+	                              icon={<IoFlag />}
+	                              label="Pinned"
+	                              size="small"
+	                            />
+	                          ) : null}
+	                          <Chip
+	                            label={formatCategoryLabel(note.category)}
+	                            size="small"
+	                            variant="outlined"
+	                          />
+	                          <Typography color="text.secondary" variant="body2">
+	                            {formatTimestamp(note.timestamp)}
+	                          </Typography>
+	                        </Stack>
+	                        <Stack direction="row" spacing={1}>
+	                          <Button
+	                            disabled={updateNoteMutation.isPending}
+	                            onClick={() => updateNoteMutation.mutate(note)}
+	                            size="small"
+	                            startIcon={note.isPinned ? <IoFlag /> : <IoFlagOutline />}
+	                            variant="text"
+	                          >
+	                            {note.isPinned ? "Unpin" : "Pin"}
+	                          </Button>
+	                          <Button
+	                            color="error"
+	                            onClick={() => setNoteToDelete(note)}
+	                            size="small"
+	                            variant="text"
+	                          >
+	                            Delete
+	                          </Button>
+	                        </Stack>
+	                      </Stack>
+	                      <Typography variant="body1">{note.content}</Typography>
                     </Stack>
                   </CardContent>
                 </Card>
@@ -172,6 +269,9 @@ export function PatientNotes({ patientId }: PatientNotesProps) {
 
           {deleteNoteMutation.isError ? (
             <Alert severity="error">Unable to delete note. Please try again.</Alert>
+          ) : null}
+          {updateNoteMutation.isError ? (
+            <Alert severity="error">Unable to update note. Please try again.</Alert>
           ) : null}
         </Stack>
       </CardContent>

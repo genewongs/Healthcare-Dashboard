@@ -1,7 +1,7 @@
 export const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 
 type RequestOptions = {
-  method?: "GET" | "POST" | "PUT" | "DELETE";
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: unknown;
   query?: Record<string, string | number | boolean | null | undefined>;
 };
@@ -52,4 +52,3 @@ export async function apiRequest<T>(
 
   return response.json() as Promise<T>;
 }
-

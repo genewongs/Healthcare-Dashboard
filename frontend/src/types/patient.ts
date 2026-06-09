@@ -1,5 +1,6 @@
 export type PatientStatus = "active" | "inactive" | "pending" | "discharged";
 export type BloodType = "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-";
+export type PatientNoteCategory = "general" | "medication" | "follow_up" | "concern";
 
 export type PatientSortField =
   | "id"
@@ -68,12 +69,20 @@ export type PatientNote = {
   patient_id: number;
   timestamp: string;
   content: string;
+  category: PatientNoteCategory;
+  isPinned: boolean;
   created_at: string;
 };
 
 export type PatientNoteCreate = {
   timestamp?: string | null;
   content: string;
+  category: PatientNoteCategory;
+  isPinned: boolean;
+};
+
+export type PatientNoteUpdate = {
+  isPinned?: boolean;
 };
 
 export type PatientSummary = {
