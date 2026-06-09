@@ -10,10 +10,10 @@ PatientNoteCategory = Literal["general", "medication", "follow_up", "concern"]
 
 
 class PatientBase(BaseModel):
-    first_name: str = Field(min_length=1)
-    last_name: str = Field(min_length=1)
+    first_name: str = Field(min_length=1, max_length=100)
+    last_name: str = Field(min_length=1, max_length=100)
     date_of_birth: date | None = None
-    phone: str | None = None
+    phone: str | None = Field(default=None, max_length=30)
     email: EmailStr | None = None
     address: str | None = None
     blood_type: BloodType | None = None
@@ -33,7 +33,20 @@ class PatientBase(BaseModel):
     @field_validator("allergies")
     @classmethod
     def allergies_must_be_clean(cls, value: list[str]) -> list[str]:
-        return [allergy.strip() for allergy in value if allergy.strip()]
+        cleaned_allergies: list[str] = []
+        seen_allergies: set[str] = set()
+        for allergy in value:
+            cleaned_allergy = allergy.strip()
+            if not cleaned_allergy:
+                continue
+            if len(cleaned_allergy) > 100:
+                raise ValueError("Allergy entries must be 100 characters or fewer")
+            normalized_allergy = cleaned_allergy.lower()
+            if normalized_allergy not in seen_allergies:
+                cleaned_allergies.append(cleaned_allergy)
+                seen_allergies.add(normalized_allergy)
+
+        return cleaned_allergies
 
     @field_validator("phone", "address", "conditions")
     @classmethod
@@ -71,7 +84,7 @@ class PatientListResponse(BaseModel):
 
 class PatientNoteCreate(BaseModel):
     timestamp: datetime | None = None
-    content: str = Field(min_length=1)
+    content: str = Field(min_length=1, max_length=2000)
     category: PatientNoteCategory = "general"
     is_pinned: bool = False
 

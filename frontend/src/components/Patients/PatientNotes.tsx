@@ -25,6 +25,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { IoFlag, IoFlagOutline } from "react-icons/io5";
+import { getApiErrorMessage } from "../../api/client";
 import {
   addPatientNote,
   deletePatientNote,
@@ -43,6 +44,7 @@ const noteCategories: Array<{ label: string; value: PatientNoteCategory }> = [
   { label: "Follow-up", value: "follow_up" },
   { label: "Concern", value: "concern" },
 ];
+const maxNoteLength = 2000;
 
 function formatTimestamp(timestamp: string) {
   return new Intl.DateTimeFormat("en-US", {
@@ -113,10 +115,27 @@ export function PatientNotes({ patientId }: PatientNotesProps) {
       return;
     }
 
+    if (trimmedContent.length > maxNoteLength) {
+      setContentError(`Note content must be ${maxNoteLength} characters or fewer`);
+      return;
+    }
+
     addNoteMutation.mutate(trimmedContent);
   };
 
   const queryErrorMessage = error instanceof Error ? error.message : "Unable to load notes";
+  const addNoteErrorMessage = getApiErrorMessage(
+    addNoteMutation.error,
+    "Unable to add note. Please try again.",
+  );
+  const updateNoteErrorMessage = getApiErrorMessage(
+    updateNoteMutation.error,
+    "Unable to update note. Please try again.",
+  );
+  const deleteNoteErrorMessage = getApiErrorMessage(
+    deleteNoteMutation.error,
+    "Unable to delete note. Please try again.",
+  );
 
   return (
     <Card variant="outlined">
@@ -143,6 +162,7 @@ export function PatientNotes({ patientId }: PatientNotesProps) {
                   setContentError("");
                 }
               }}
+              slotProps={{ htmlInput: { maxLength: maxNoteLength } }}
               value={content}
             />
             <Stack
@@ -185,7 +205,7 @@ export function PatientNotes({ patientId }: PatientNotesProps) {
               </Button>
             </Stack>
             {addNoteMutation.isError ? (
-              <Alert severity="error">Unable to add note. Please try again.</Alert>
+              <Alert severity="error">{addNoteErrorMessage}</Alert>
             ) : null}
           </Stack>
 
@@ -212,54 +232,54 @@ export function PatientNotes({ patientId }: PatientNotesProps) {
                       <Stack
                         direction={{ xs: "column", sm: "row" }}
                         spacing={1}
-	                        sx={{
-	                          alignItems: { xs: "flex-start", sm: "center" },
-	                          justifyContent: "space-between",
-	                        }}
-	                      >
-	                        <Stack
-	                          direction="row"
-	                          spacing={1}
-	                          sx={{ alignItems: "center", flexWrap: "wrap" }}
-	                        >
-	                          {note.isPinned ? (
-	                            <Chip
-	                              color="warning"
-	                              icon={<IoFlag />}
-	                              label="Pinned"
-	                              size="small"
-	                            />
-	                          ) : null}
-	                          <Chip
-	                            label={formatCategoryLabel(note.category)}
-	                            size="small"
-	                            variant="outlined"
-	                          />
-	                          <Typography color="text.secondary" variant="body2">
-	                            {formatTimestamp(note.timestamp)}
-	                          </Typography>
-	                        </Stack>
-	                        <Stack direction="row" spacing={1}>
-	                          <Button
-	                            disabled={updateNoteMutation.isPending}
-	                            onClick={() => updateNoteMutation.mutate(note)}
-	                            size="small"
-	                            startIcon={note.isPinned ? <IoFlag /> : <IoFlagOutline />}
-	                            variant="text"
-	                          >
-	                            {note.isPinned ? "Unpin" : "Pin"}
-	                          </Button>
-	                          <Button
-	                            color="error"
-	                            onClick={() => setNoteToDelete(note)}
-	                            size="small"
-	                            variant="text"
-	                          >
-	                            Delete
-	                          </Button>
-	                        </Stack>
-	                      </Stack>
-	                      <Typography variant="body1">{note.content}</Typography>
+                        sx={{
+                          alignItems: { xs: "flex-start", sm: "center" },
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          sx={{ alignItems: "center", flexWrap: "wrap" }}
+                        >
+                          {note.isPinned ? (
+                            <Chip
+                              color="warning"
+                              icon={<IoFlag />}
+                              label="Pinned"
+                              size="small"
+                            />
+                          ) : null}
+                          <Chip
+                            label={formatCategoryLabel(note.category)}
+                            size="small"
+                            variant="outlined"
+                          />
+                          <Typography color="text.secondary" variant="body2">
+                            {formatTimestamp(note.timestamp)}
+                          </Typography>
+                        </Stack>
+                        <Stack direction="row" spacing={1}>
+                          <Button
+                            disabled={updateNoteMutation.isPending}
+                            onClick={() => updateNoteMutation.mutate(note)}
+                            size="small"
+                            startIcon={note.isPinned ? <IoFlag /> : <IoFlagOutline />}
+                            variant="text"
+                          >
+                            {note.isPinned ? "Unpin" : "Pin"}
+                          </Button>
+                          <Button
+                            color="error"
+                            onClick={() => setNoteToDelete(note)}
+                            size="small"
+                            variant="text"
+                          >
+                            Delete
+                          </Button>
+                        </Stack>
+                      </Stack>
+                      <Typography variant="body1">{note.content}</Typography>
                     </Stack>
                   </CardContent>
                 </Card>
@@ -268,10 +288,10 @@ export function PatientNotes({ patientId }: PatientNotesProps) {
           ) : null}
 
           {deleteNoteMutation.isError ? (
-            <Alert severity="error">Unable to delete note. Please try again.</Alert>
+            <Alert severity="error">{deleteNoteErrorMessage}</Alert>
           ) : null}
           {updateNoteMutation.isError ? (
-            <Alert severity="error">Unable to update note. Please try again.</Alert>
+            <Alert severity="error">{updateNoteErrorMessage}</Alert>
           ) : null}
         </Stack>
       </CardContent>

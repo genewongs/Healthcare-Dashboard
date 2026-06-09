@@ -1,4 +1,4 @@
-import { ApiError } from "../api/client";
+import { ApiError, getApiErrorMessage } from "../api/client";
 import type {
   PatientFormServerErrors,
   PatientFormSubmitValues,
@@ -22,9 +22,21 @@ function isPatientFormField(value: unknown): value is keyof PatientFormSubmitVal
   return typeof value === "string" && patientFormFields.has(value as keyof PatientFormSubmitValues);
 }
 
+function formatServerFieldMessage(message: unknown) {
+  if (typeof message !== "string" || !message.trim()) {
+    return "Invalid value";
+  }
+
+  if (message === "Field required") {
+    return "This field is required";
+  }
+
+  return message.replace(/^Value error,\s*/i, "");
+}
+
 export function getPatientFormServerError(error: unknown, fallback: string) {
   if (!(error instanceof ApiError)) {
-    return fallback;
+    return getApiErrorMessage(error, fallback);
   }
 
   if (typeof error.detail === "string") {
@@ -41,10 +53,10 @@ export function getPatientFormServerFieldErrors(error: unknown): PatientFormServ
 
   return error.detail.reduce<PatientFormServerErrors>((fieldErrors, item) => {
     const location = Array.isArray(item.loc) ? item.loc : [];
-    const fieldName = location[location.length - 1];
+    const fieldName = location.find(isPatientFormField);
 
     if (isPatientFormField(fieldName)) {
-      fieldErrors[fieldName] = typeof item.msg === "string" ? item.msg : "Invalid value";
+      fieldErrors[fieldName] = formatServerFieldMessage(item.msg);
     }
 
     return fieldErrors;

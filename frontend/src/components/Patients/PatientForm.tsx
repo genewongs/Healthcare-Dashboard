@@ -23,7 +23,9 @@ import { formatPatientStatusLabel } from "./PatientStatusChip";
 const patientStatuses: PatientStatus[] = ["active", "inactive", "pending", "discharged"];
 const bloodTypes: BloodType[] = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
-const optionalText = z.string().trim();
+const optionalPhone = z.string().trim().max(30, "Phone must be 30 characters or fewer");
+const optionalAddress = z.string().trim().max(500, "Address must be 500 characters or fewer");
+const optionalConditions = z.string().trim().max(500, "Conditions must be 500 characters or fewer");
 
 const optionalEmail = z.string().trim().refine(
   (value) => value === "" || z.email().safeParse(value).success,
@@ -41,15 +43,29 @@ const requiredDate = z.string().trim().min(1, "Last visit is required").refine(
 );
 
 const patientFormSchema = z.object({
-  first_name: z.string().trim().min(1, "First name is required"),
-  last_name: z.string().trim().min(1, "Last name is required"),
+  first_name: z
+    .string()
+    .trim()
+    .min(1, "First name is required")
+    .max(100, "First name must be 100 characters or fewer"),
+  last_name: z
+    .string()
+    .trim()
+    .min(1, "Last name is required")
+    .max(100, "Last name must be 100 characters or fewer"),
   date_of_birth: optionalDate,
-  phone: optionalText,
+  phone: optionalPhone,
   email: optionalEmail,
-  address: optionalText,
+  address: optionalAddress,
   blood_type: z.enum(bloodTypes, "Select a valid blood type").or(z.literal("")),
-  allergies: z.array(z.string().trim().min(1, "Allergy cannot be empty")),
-  conditions: optionalText,
+  allergies: z.array(
+    z
+      .string()
+      .trim()
+      .min(1, "Allergy cannot be empty")
+      .max(100, "Allergy entries must be 100 characters or fewer"),
+  ),
+  conditions: optionalConditions,
   status: z.enum(patientStatuses, "Select a valid status"),
   last_visit: requiredDate,
 });
@@ -141,10 +157,19 @@ function AllergiesInput({
   const [inputValue, setInputValue] = useState("");
 
   const addAllergies = (rawValue: string) => {
+    const existingAllergies = new Set(value.map((allergy) => allergy.toLowerCase()));
     const newAllergies = rawValue
       .split(",")
       .map((allergy) => allergy.trim())
-      .filter(Boolean);
+      .filter(Boolean)
+      .filter((allergy) => {
+        const normalizedAllergy = allergy.toLowerCase();
+        if (existingAllergies.has(normalizedAllergy)) {
+          return false;
+        }
+        existingAllergies.add(normalizedAllergy);
+        return true;
+      });
 
     if (newAllergies.length > 0) {
       onChange([...value, ...newAllergies]);
@@ -210,8 +235,7 @@ function AllergiesInput({
                       key={`${allergy}-${index}`}
                       label={allergy}
                       onDelete={() => removeAllergy(index)}
-                      // size="small"
-                      // sx={{marginTop: 34, backgroundColor: 'red'}}
+                      size="small"
                     />
                   ))}
                 </Stack>
