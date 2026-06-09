@@ -8,6 +8,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
+import { IoDocumentTextOutline } from "react-icons/io5";
 import { getPatientSummary } from "../../api/patients";
 
 type PatientSummaryCardProps = {
@@ -32,7 +33,12 @@ export function PatientSummaryCard({ patientId }: PatientSummaryCardProps) {
       <CardContent>
         <Stack spacing={2}>
           <Stack spacing={0.5}>
-            <Typography variant="h6">Patient Summary</Typography>
+            <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
+              <Box sx={{ color: "primary.main", display: "flex", fontSize: 24 }}>
+                <IoDocumentTextOutline />
+              </Box>
+              <Typography variant="h6">Patient Summary</Typography>
+            </Stack>
             <Typography color="text.secondary" variant="body2">
               Template-generated overview based on patient details and notes.
             </Typography>

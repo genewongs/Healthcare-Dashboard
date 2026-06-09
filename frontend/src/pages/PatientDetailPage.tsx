@@ -1,8 +1,6 @@
 import {
   Alert,
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
+  Avatar,
   Box,
   Button,
   Card,
@@ -17,19 +15,27 @@ import {
   IconButton,
   Stack,
   Typography,
-  useMediaQuery,
-  useTheme,
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
-import { IoChevronDown } from "react-icons/io5";
+import {
+  IoCalendarOutline,
+  IoCallOutline,
+  IoDocumentTextOutline,
+  IoFitnessOutline,
+  IoHomeOutline,
+  IoMailOutline,
+  IoMedkitOutline,
+  IoPersonOutline,
+  IoWaterOutline,
+} from "react-icons/io5";
+import { MdOutlineModeEditOutline } from "react-icons/md";
+import { RiDeleteBinLine } from "react-icons/ri";
 import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 import { deletePatient, getPatientById } from "../api/patients";
 import { CircularBackButton } from "../components/Layout";
 import { PatientNotes, PatientStatusChip, PatientSummaryCard } from "../components/Patients";
 import type { Patient } from "../types/patient";
-import { MdOutlineModeEditOutline } from "react-icons/md";
-import { RiDeleteBinLine } from "react-icons/ri";
 
 function calculateAge(dateOfBirth: string | null) {
   if (!dateOfBirth) {
@@ -68,41 +74,84 @@ function formatAllergies(allergies: string[]) {
 
 function FieldValue({
   componentField,
+  icon,
   label,
   value,
 }: {
   componentField?: ReactNode;
+  icon: ReactNode;
   label: string;
   value?: string | null;
 }) {
   return (
-    <Box sx={{ minWidth: { md: 120 } }}>
-      <Typography color="text.secondary" variant="body2">
-        {label}
-      </Typography>
-      {componentField ?? <Typography variant="body1">{value || "Not recorded"}</Typography>}
-    </Box>
+    <Stack
+      direction="row"
+      spacing={1.5}
+      sx={{ alignItems: "flex-start", minWidth: 0 }}
+    >
+      <Box
+        sx={{
+          alignItems: "center",
+          bgcolor: "primary.light",
+          borderRadius: 1.5,
+          color: "primary.main",
+          display: "flex",
+          flexShrink: 0,
+          height: 28,
+          justifyContent: "center",
+          mt: 0.25,
+          width: 28,
+        }}
+      >
+        {icon}
+      </Box>
+      <Box sx={{ minWidth: 0 }}>
+        <Typography color="text.secondary" variant="body2">
+          {label}
+        </Typography>
+        {componentField ?? (
+          <Typography sx={{ overflowWrap: "anywhere" }} variant="body1">
+            {value || "Not recorded"}
+          </Typography>
+        )}
+      </Box>
+    </Stack>
   );
 }
 
 function FieldGrid({ children }: { children: ReactNode }) {
   return (
-    <Stack
-      direction={{ xs: "column", md: "row" }}
-      spacing={{ xs: 2, md: 5 }}
-      sx={{ alignItems: "flex-start", flexWrap: "wrap" }}
+    <Box
+      sx={{
+        display: "grid",
+        gap: 2,
+        gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))" },
+      }}
     >
       {children}
-    </Stack>
+    </Box>
   );
 }
 
-function PatientSection({ children, title }: { children: ReactNode; title: string }) {
+function PatientSection({
+  children,
+  icon,
+  title,
+}: {
+  children: ReactNode;
+  icon: ReactNode;
+  title: string;
+}) {
   return (
     <Card variant="outlined">
       <CardContent>
         <Stack spacing={2}>
-          <Typography sx={{ fontWeight: "bold" }}>{title}</Typography>
+          <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
+            <Box sx={{ color: "primary.main", display: "flex", fontSize: 24 }}>
+              {icon}
+            </Box>
+            <Typography variant="h6">{title}</Typography>
+          </Stack>
           <Divider />
           <FieldGrid>{children}</FieldGrid>
         </Stack>
@@ -111,33 +160,14 @@ function PatientSection({ children, title }: { children: ReactNode; title: strin
   );
 }
 
-function DetailAccordion({
-  children,
-  defaultExpanded = false,
-  title,
-}: {
-  children: ReactNode;
-  defaultExpanded?: boolean;
-  title: string;
-}) {
-  return (
-    <Accordion defaultExpanded={defaultExpanded} disableGutters>
-      <AccordionSummary expandIcon={<IoChevronDown />}>
-        <Typography sx={{ fontWeight: "bold" }}>{title}</Typography>
-      </AccordionSummary>
-      <AccordionDetails>
-        {children}
-      </AccordionDetails>
-    </Accordion>
-  );
+function getInitials(patient: Patient) {
+  return `${patient.first_name.charAt(0)}${patient.last_name.charAt(0)}`.toUpperCase();
 }
 
 export function PatientDetailPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const theme = useTheme();
-  const isCompact = useMediaQuery(theme.breakpoints.down("md"));
   const { id } = useParams();
   const patientId = Number(id);
   const hasValidPatientId = Number.isInteger(patientId) && patientId > 0;
@@ -196,84 +226,134 @@ export function PatientDetailPage() {
   const fullName = `${patient.first_name} ${patient.last_name}`;
   const personalFields = (
     <>
-      <FieldValue label="Age" value={calculateAge(patient.date_of_birth)} />
-      <FieldValue label="Date of birth" value={formatDate(patient.date_of_birth)} />
-      <FieldValue label="Phone" value={patient.phone} />
-      <FieldValue label="Email" value={patient.email} />
-      <FieldValue label="Address" value={patient.address} />
-      <FieldValue label="Status" componentField={<PatientStatusChip status={patient.status} />} />
+      <FieldValue icon={<IoPersonOutline />} label="Age" value={calculateAge(patient.date_of_birth)} />
+      <FieldValue icon={<IoCalendarOutline />} label="Date of birth" value={formatDate(patient.date_of_birth)} />
+      <FieldValue icon={<IoCallOutline />} label="Phone" value={patient.phone} />
+      <FieldValue icon={<IoMailOutline />} label="Email" value={patient.email} />
+      <FieldValue icon={<IoHomeOutline />} label="Address" value={patient.address} />
+      <FieldValue
+        componentField={<PatientStatusChip status={patient.status} />}
+        icon={<IoFitnessOutline />}
+        label="Status"
+      />
     </>
   );
   const medicalFields = (
     <>
-      <FieldValue label="Blood type" value={patient.blood_type} />
-      <FieldValue label="Conditions" value={patient.conditions} />
-      <FieldValue label="Allergies" value={formatAllergies(patient.allergies)} />
-      <FieldValue label="Last visit" value={formatDate(patient.last_visit)} />
+      <FieldValue icon={<IoWaterOutline />} label="Blood type" value={patient.blood_type} />
+      <FieldValue icon={<IoMedkitOutline />} label="Conditions" value={patient.conditions} />
+      <FieldValue icon={<IoFitnessOutline />} label="Allergies" value={formatAllergies(patient.allergies)} />
+      <FieldValue icon={<IoCalendarOutline />} label="Last visit" value={formatDate(patient.last_visit)} />
     </>
   );
 
   return (
-    <Stack spacing={3}>
-      <Stack
-        direction={{ xs: "column", sm: "row" }}
-        spacing={2}
-        sx={{ alignItems: { xs: "flex-start", sm: "center" }, justifyContent: "space-between" }}
-      >
-        <Stack spacing={1}>
-          <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", flexWrap: "wrap" }}>
-            <CircularBackButton ariaLabel="Back to patients" to="/patients" />
-            <Typography
-              sx={{ minWidth: 0, overflowWrap: "anywhere" }}
-              variant={isCompact ? "h5" : "h4"}
-            >
-              {fullName}
-            </Typography>
-            <IconButton
-              aria-label={`Edit ${fullName}`}
-              color="primary"
-              component={RouterLink}
-              to={`/patients/${patient.id}/edit`}
-            >
-              <MdOutlineModeEditOutline size={28} />
-            </IconButton>
-          </Stack>
-        </Stack>
+    <Stack spacing={3.5}>
+      <Stack spacing={2}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <CircularBackButton ariaLabel="Back to patients" to="/patients" />
+          <Typography>Back to patients</Typography>
+        </Box>
 
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
-          <IconButton
-            aria-label={`Delete ${fullName}`}
-            color="error"
-            onClick={() => setDeleteDialogOpen(true)}
-          >
-            <RiDeleteBinLine size={28} />
-          </IconButton>
+        <Stack direction="row" spacing={1.5} sx={{ alignItems: "flex-start", minWidth: 0 }}>
+            <Avatar
+              sx={{
+                bgcolor: "primary.light",
+                color: "primary.main",
+                flexShrink: 0,
+                fontSize: { xs: 18, sm: 24, md: 30 },
+                fontWeight: 800,
+                height: { xs: 48, sm: 64, md: 88 },
+                mt: { xs: 0.5, md: 0 },
+                width: { xs: 48, sm: 64, md: 88 },
+              }}
+            >
+              {getInitials(patient)}
+            </Avatar>
+            <Stack spacing={1} sx={{ flexGrow: 1, minWidth: 0 }}>
+              <Stack
+                direction={{ xs: "row", sm: "row" }}
+                spacing={1}
+                sx={{
+                  alignItems: "flex-start",
+                  justifyContent: "space-between",
+                  minWidth: 0,
+                }}
+              >
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  sx={{ alignItems: "center", flexWrap: "wrap", minWidth: 0 }}
+                >
+                  <Typography
+                    sx={{
+                      fontSize: { xs: 30, sm: 34, md: 42 },
+                      lineHeight: 1.08,
+                      overflowWrap: "anywhere",
+                    }}
+                    variant="h4"
+                  >
+                    {fullName}
+                  </Typography>
+                  <PatientStatusChip status={patient.status} />
+                </Stack>
+                <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
+                  <IconButton
+                    aria-label={`Edit ${fullName}`}
+                    color="primary"
+                    component={RouterLink}
+                    sx={{
+                      border: 1,
+                      borderColor: "divider",
+                      bgcolor: "background.paper",
+                      height: { xs: 38, sm: 44, md: 48 },
+                      width: { xs: 38, sm: 44, md: 48 },
+                    }}
+                    to={`/patients/${patient.id}/edit`}
+                  >
+                    <MdOutlineModeEditOutline size={22} />
+                  </IconButton>
+                  <IconButton
+                    aria-label={`Delete ${fullName}`}
+                    color="error"
+                    onClick={() => setDeleteDialogOpen(true)}
+                    sx={{
+                      border: 1,
+                      borderColor: "divider",
+                      bgcolor: "background.paper",
+                      height: { xs: 38, sm: 44, md: 48 },
+                      width: { xs: 38, sm: 44, md: 48 },
+                    }}
+                  >
+                    <RiDeleteBinLine size={22} />
+                  </IconButton>
+                </Stack>
+              </Stack>
+              <Typography color="text.secondary" variant="body1">
+                {calculateAge(patient.date_of_birth)} years old · DOB{" "}
+                {formatDate(patient.date_of_birth)} · Last visit{" "}
+                {formatDate(patient.last_visit)}
+              </Typography>
+            </Stack>
         </Stack>
       </Stack>
 
-      {isCompact ? (
-        <Stack spacing={1.5}>
-          <DetailAccordion defaultExpanded title="Personal Information">
-            <FieldGrid>{personalFields}</FieldGrid>
-          </DetailAccordion>
-          <DetailAccordion title="Medical Information">
-            <FieldGrid>{medicalFields}</FieldGrid>
-          </DetailAccordion>
-          <DetailAccordion title="Patient Summary">
-            <PatientSummaryCard patientId={patient.id} />
-          </DetailAccordion>
-          <DetailAccordion title="Patient Notes">
-            <PatientNotes patientId={patient.id} />
-          </DetailAccordion>
-        </Stack>
-      ) : (
-        <>
-          <PatientSection title="Personal Information">{personalFields}</PatientSection>
-          <PatientSection title="Medical Information">{medicalFields}</PatientSection>
-          <PatientSummaryCard patientId={patient.id} />
-          <PatientNotes patientId={patient.id} />
-        </>
-      )}
+      <Box
+        sx={{
+          display: "grid",
+          gap: 2.5,
+          gridTemplateColumns: { xs: "1fr", lg: "repeat(2, minmax(0, 1fr))" },
+        }}
+      >
+        <PatientSection icon={<IoPersonOutline />} title="Personal Information">
+          {personalFields}
+        </PatientSection>
+        <PatientSection icon={<IoMedkitOutline />} title="Medical Information">
+          {medicalFields}
+        </PatientSection>
+        <PatientSummaryCard patientId={patient.id} />
+        <PatientNotes patientId={patient.id} />
+      </Box>
 
       {deleteMutation.isError ? (
         <Alert severity="error">Unable to delete patient. Please try again.</Alert>

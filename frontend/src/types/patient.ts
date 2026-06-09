@@ -52,6 +52,10 @@ export type PatientListParams = {
   page_size?: number;
   search?: string;
   status?: PatientStatus;
+  age_min?: number;
+  age_max?: number;
+  last_visit_from?: string;
+  last_visit_to?: string;
   sort_by?: PatientSortField;
   sort_order?: SortOrder;
 };

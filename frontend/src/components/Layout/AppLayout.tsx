@@ -1,5 +1,6 @@
 import {
   AppBar,
+  Avatar,
   Box,
   Drawer,
   IconButton,
@@ -7,6 +8,7 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  Stack,
   Toolbar,
   Tooltip,
   Typography,
@@ -20,6 +22,7 @@ import {
   IoHomeOutline,
   IoMenu,
   IoPeopleOutline,
+  IoShieldCheckmarkOutline,
 } from "react-icons/io5";
 import { NavLink, Outlet } from "react-router-dom";
 
@@ -48,14 +51,19 @@ function SidebarContent({
               key={item.path}
               onClick={onNavigate}
               sx={{
-                borderRadius: 1,
+                borderRadius: 2,
+                color: "text.secondary",
                 justifyContent: collapsed ? "center" : "flex-start",
-                minHeight: 44,
-                mx: 1,
+                minHeight: 48,
+                mx: 1.5,
                 px: collapsed ? 1.5 : 2,
+                transition: (muiTheme) =>
+                  muiTheme.transitions.create(["background-color", "color"], {
+                    duration: muiTheme.transitions.duration.shorter,
+                  }),
                 "&.active": {
-                  bgcolor: "primary.main",
-                  color: "primary.contrastText",
+                  bgcolor: "primary.light",
+                  color: "primary.main",
                   "& .MuiListItemIcon-root": {
                     color: "inherit",
                   },
@@ -106,17 +114,18 @@ export function AppLayout() {
       <AppBar
         position="fixed"
         sx={{
+          background: "linear-gradient(90deg, #ffffff 0%, #f4f1ff 55%, #ffffff 100%)",
+          color: "text.primary",
           zIndex: (muiTheme) => muiTheme.zIndex.drawer + 1,
         }}
       >
-        <Toolbar>
+        <Toolbar sx={{ minHeight: { xs: 64, sm: 72 } }}>
           {!isDesktop && (
             <IconButton
               aria-label="Open navigation"
-              color="inherit"
               edge="start"
               onClick={toggleMobileDrawer}
-              sx={{ mr: 2 }}
+              sx={{ color: "text.secondary", mr: 1.5 }}
             >
               <IoMenu />
             </IconButton>
@@ -124,17 +133,58 @@ export function AppLayout() {
           {isDesktop ? (
             <IconButton
               aria-label={desktopCollapsed ? "Expand navigation" : "Collapse navigation"}
-              color="inherit"
               edge="start"
               onClick={toggleDesktopDrawer}
-              sx={{ mr: 2 }}
+              sx={{ color: "text.secondary", mr: 1.5 }}
             >
               {desktopCollapsed ? <IoChevronForward /> : <IoChevronBack />}
             </IconButton>
           ) : null}
-          <Typography component="div" variant="h6">
-            Healthcare Dashboard
-          </Typography>
+          <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
+            <Box
+              sx={{
+                alignItems: "center",
+                bgcolor: "primary.light",
+                borderRadius: 2,
+                color: "primary.main",
+                display: "flex",
+                height: 36,
+                justifyContent: "center",
+                width: 36,
+              }}
+            >
+              <IoShieldCheckmarkOutline size={22} />
+            </Box>
+            <Typography component="div" sx={{ fontWeight: 800 }} variant="h6">
+              Healthcare Dashboard
+            </Typography>
+          </Stack>
+          <Stack
+            direction="row"
+            spacing={1.25}
+            sx={{ alignItems: "center", ml: "auto" }}
+          >
+            <Avatar
+              sx={{
+                bgcolor: "primary.main",
+                color: "primary.contrastText",
+                fontSize: 14,
+                fontWeight: 800,
+                height: 36,
+                width: 36,
+              }}
+            >
+              RN
+            </Avatar>
+            <Box sx={{ display: { xs: "none", sm: "block" } }}>
+              <Typography sx={{ fontWeight: 750, lineHeight: 1.1 }} variant="body2">
+                Care Team
+              </Typography>
+              <Typography color="text.secondary" sx={{ lineHeight: 1.1 }} variant="caption">
+                RN
+              </Typography>
+            </Box>
+          </Stack>
         </Toolbar>
       </AppBar>
 
@@ -153,6 +203,7 @@ export function AppLayout() {
             display: { xs: "block", md: "none" },
             "& .MuiDrawer-paper": {
               boxSizing: "border-box",
+              borderColor: "divider",
               width: expandedDrawerWidth,
             },
           }}
@@ -168,6 +219,7 @@ export function AppLayout() {
             display: { xs: "none", md: "block" },
             "& .MuiDrawer-paper": {
               boxSizing: "border-box",
+              borderColor: "divider",
               overflowX: "hidden",
               transition: (muiTheme) =>
                 muiTheme.transitions.create("width", {
@@ -189,7 +241,7 @@ export function AppLayout() {
         sx={{
           flexGrow: 1,
           minWidth: 0,
-          p: { xs: 2, sm: 3 },
+          p: { xs: 2, sm: 3, lg: 4 },
           transition: (muiTheme) =>
             muiTheme.transitions.create("width", {
               duration: muiTheme.transitions.duration.shorter,

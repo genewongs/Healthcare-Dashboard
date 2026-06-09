@@ -6,6 +6,7 @@ import {
   CardContent,
   Chip,
   CircularProgress,
+  Collapse,
   Dialog,
   DialogActions,
   DialogContent,
@@ -24,7 +25,14 @@ import {
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { IoFlag, IoFlagOutline } from "react-icons/io5";
+import {
+  IoAdd,
+  IoChevronDown,
+  IoDocumentTextOutline,
+  IoFlag,
+  IoFlagOutline,
+  IoTrashOutline,
+} from "react-icons/io5";
 import { getApiErrorMessage } from "../../api/client";
 import {
   addPatientNote,
@@ -61,6 +69,7 @@ export function PatientNotes({ patientId }: PatientNotesProps) {
   const [content, setContent] = useState("");
   const [category, setCategory] = useState<PatientNoteCategory>("general");
   const [contentError, setContentError] = useState("");
+  const [expandedNoteId, setExpandedNoteId] = useState<number | null>(null);
   const [isPinned, setIsPinned] = useState(false);
   const [noteToDelete, setNoteToDelete] = useState<PatientNote | null>(null);
   const queryClient = useQueryClient();
@@ -87,6 +96,7 @@ export function PatientNotes({ patientId }: PatientNotesProps) {
       setContent("");
       setContentError("");
       setCategory("general");
+      setExpandedNoteId(null);
       setIsPinned(false);
       queryClient.invalidateQueries({ queryKey: notesQueryKey });
     },
@@ -142,7 +152,12 @@ export function PatientNotes({ patientId }: PatientNotesProps) {
       <CardContent>
         <Stack spacing={3}>
           <Stack spacing={0.5}>
-            <Typography variant="h6">Patient Notes</Typography>
+            <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
+              <Box sx={{ color: "primary.main", display: "flex", fontSize: 24 }}>
+                <IoDocumentTextOutline />
+              </Box>
+              <Typography variant="h6">Patient Notes</Typography>
+            </Stack>
             <Typography color="text.secondary" variant="body2">
               Track clinical notes for this patient.
             </Typography>
@@ -198,6 +213,7 @@ export function PatientNotes({ patientId }: PatientNotesProps) {
               />
               <Button
                 disabled={addNoteMutation.isPending}
+                startIcon={<IoAdd />}
                 onClick={handleAddNote}
                 variant="contained"
               >
@@ -224,62 +240,150 @@ export function PatientNotes({ patientId }: PatientNotesProps) {
           ) : null}
 
           {!isLoading && !isError && notes.length > 0 ? (
-            <Stack spacing={2}>
+            <Stack spacing={1.5}>
               {notes.map((note) => (
-                <Card key={note.id} variant="outlined">
-                  <CardContent>
+                <Card
+                  key={note.id}
+                  onClick={() =>
+                    setExpandedNoteId((currentId) =>
+                      currentId === note.id ? null : note.id,
+                    )
+                  }
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      setExpandedNoteId((currentId) =>
+                        currentId === note.id ? null : note.id,
+                      );
+                    }
+                  }}
+                  role="button"
+                  sx={{
+                    bgcolor: note.isPinned ? "warning.light" : "background.paper",
+                    cursor: "pointer",
+                    transition: (theme) =>
+                      theme.transitions.create(["background-color", "border-color", "box-shadow"], {
+                        duration: theme.transitions.duration.shorter,
+                      }),
+                    "&:hover": {
+                      borderColor: note.isPinned ? "warning.main" : "primary.main",
+                      boxShadow: "0 12px 28px rgba(15, 23, 42, 0.08)",
+                    },
+                  }}
+                  tabIndex={0}
+                  variant="outlined"
+                >
+                  <CardContent sx={{ "&:last-child": { pb: 2 } }}>
                     <Stack spacing={2}>
                       <Stack
-                        direction={{ xs: "column", sm: "row" }}
+                        direction="row"
                         spacing={1}
                         sx={{
-                          alignItems: { xs: "flex-start", sm: "center" },
+                          alignItems: "flex-start",
                           justifyContent: "space-between",
                         }}
                       >
-                        <Stack
-                          direction="row"
-                          spacing={1}
-                          sx={{ alignItems: "center", flexWrap: "wrap" }}
-                        >
-                          {note.isPinned ? (
+                        <Stack spacing={1} sx={{ minWidth: 0 }}>
+                          <Stack
+                            direction="row"
+                            spacing={1}
+                            sx={{ alignItems: "center", flexWrap: "wrap" }}
+                          >
+                            {note.isPinned ? (
+                              <Chip
+                                color="warning"
+                                icon={<IoFlag />}
+                                label="Pinned"
+                                size="small"
+                              />
+                            ) : null}
                             <Chip
-                              color="warning"
-                              icon={<IoFlag />}
-                              label="Pinned"
+                              label={formatCategoryLabel(note.category)}
                               size="small"
+                              variant="outlined"
                             />
-                          ) : null}
-                          <Chip
-                            label={formatCategoryLabel(note.category)}
-                            size="small"
-                            variant="outlined"
-                          />
-                          <Typography color="text.secondary" variant="body2">
-                            {formatTimestamp(note.timestamp)}
+                            <Typography color="text.secondary" variant="body2">
+                              {formatTimestamp(note.timestamp)}
+                            </Typography>
+                          </Stack>
+                          <Typography
+                            sx={{
+                              display: "-webkit-box",
+                              overflow: "hidden",
+                              WebkitBoxOrient: "vertical",
+                              WebkitLineClamp: expandedNoteId === note.id ? "unset" : 2,
+                            }}
+                            variant="body1"
+                          >
+                            {note.content}
                           </Typography>
                         </Stack>
-                        <Stack direction="row" spacing={1}>
-                          <Button
-                            disabled={updateNoteMutation.isPending}
-                            onClick={() => updateNoteMutation.mutate(note)}
-                            size="small"
-                            startIcon={note.isPinned ? <IoFlag /> : <IoFlagOutline />}
-                            variant="text"
-                          >
-                            {note.isPinned ? "Unpin" : "Pin"}
-                          </Button>
-                          <Button
-                            color="error"
-                            onClick={() => setNoteToDelete(note)}
-                            size="small"
-                            variant="text"
-                          >
-                            Delete
-                          </Button>
-                        </Stack>
+                        <Box
+                          sx={{
+                            color: "text.secondary",
+                            display: "flex",
+                            mt: 0.25,
+                            transform:
+                              expandedNoteId === note.id ? "rotate(180deg)" : "rotate(0deg)",
+                            transition: (theme) =>
+                              theme.transitions.create("transform", {
+                                duration: theme.transitions.duration.shorter,
+                              }),
+                          }}
+                        >
+                          <IoChevronDown />
+                        </Box>
                       </Stack>
-                      <Typography variant="body1">{note.content}</Typography>
+
+                      <Collapse in={expandedNoteId === note.id} timeout="auto" unmountOnExit>
+                        <Stack
+                          direction={{ xs: "column", sm: "row" }}
+                          spacing={1}
+                          sx={{
+                            alignItems: { xs: "stretch", sm: "center" },
+                            borderTop: 1,
+                            borderColor: "divider",
+                            justifyContent: "space-between",
+                            pt: 2,
+                          }}
+                        >
+                          {note.isPinned ? (
+                            <Typography color="text.secondary" variant="body2">
+                              This note is pinned and appears first.
+                            </Typography>
+                          ) : (
+                            <Typography color="text.secondary" variant="body2">
+                              Click again to collapse this note.
+                            </Typography>
+                          )}
+                          <Stack direction="row" spacing={1}>
+                            <Button
+                              disabled={updateNoteMutation.isPending}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                updateNoteMutation.mutate(note);
+                              }}
+                              size="small"
+                              startIcon={note.isPinned ? <IoFlag /> : <IoFlagOutline />}
+                              variant="outlined"
+                            >
+                              {note.isPinned ? "Unpin" : "Pin"}
+                            </Button>
+                            <Button
+                              color="error"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                setNoteToDelete(note);
+                              }}
+                              size="small"
+                              startIcon={<IoTrashOutline />}
+                              variant="text"
+                            >
+                              Delete
+                            </Button>
+                          </Stack>
+                        </Stack>
+                      </Collapse>
                     </Stack>
                   </CardContent>
                 </Card>

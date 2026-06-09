@@ -1,5 +1,5 @@
 import { IconButton } from "@mui/material";
-import { IoChevronBackCircleSharp } from "react-icons/io5";
+import { IoArrowBackCircleOutline, IoChevronBackCircleSharp } from "react-icons/io5";
 import { Link as RouterLink } from "react-router-dom";
 
 type CircularBackButtonProps = {
@@ -21,7 +21,7 @@ export function CircularBackButton({
       }}
       to={to}
     >
-      <IoChevronBackCircleSharp size={33} />
+      <IoArrowBackCircleOutline size={30} />
     </IconButton>
   );
 }

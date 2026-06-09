@@ -1,8 +1,8 @@
-from datetime import date
+from datetime import date, timedelta
 from math import ceil
 from typing import Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status as http_status
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
@@ -46,6 +46,13 @@ def calculate_age(date_of_birth: date | None) -> int | None:
     return age
 
 
+def subtract_years(day: date, years: int) -> date:
+    try:
+        return day.replace(year=day.year - years)
+    except ValueError:
+        return day.replace(month=2, day=28, year=day.year - years)
+
+
 def build_notes_narrative(notes: list[PatientNote]) -> str:
     if not notes:
         return "No clinical notes have been recorded for this patient yet."
@@ -63,10 +70,30 @@ def list_patients(
     page_size: int = Query(10, ge=1, le=100),
     search: str | None = Query(None),
     status: PatientStatus | None = Query(None),
+    age_min: int | None = Query(None, ge=0, le=130),
+    age_max: int | None = Query(None, ge=0, le=130),
+    last_visit_from: date | None = Query(None),
+    last_visit_to: date | None = Query(None),
     sort_by: PatientSortField = Query("last_name"),
     sort_order: SortOrder = Query("asc"),
     db: Session = Depends(get_db),
 ) -> PatientListResponse:
+    if age_min is not None and age_max is not None and age_min > age_max:
+        raise HTTPException(
+            status_code=http_status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="age_min must be less than or equal to age_max",
+        )
+
+    if (
+        last_visit_from is not None
+        and last_visit_to is not None
+        and last_visit_from > last_visit_to
+    ):
+        raise HTTPException(
+            status_code=http_status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="last_visit_from must be before or equal to last_visit_to",
+        )
+
     query = db.query(Patient)
 
     if search:
@@ -82,6 +109,21 @@ def list_patients(
 
     if status:
         query = query.filter(Patient.status == status)
+
+    today = date.today()
+    if age_min is not None:
+        max_birth_date = subtract_years(today, age_min)
+        query = query.filter(Patient.date_of_birth <= max_birth_date)
+
+    if age_max is not None:
+        min_birth_date = subtract_years(today, age_max + 1) + timedelta(days=1)
+        query = query.filter(Patient.date_of_birth >= min_birth_date)
+
+    if last_visit_from is not None:
+        query = query.filter(Patient.last_visit >= last_visit_from)
+
+    if last_visit_to is not None:
+        query = query.filter(Patient.last_visit <= last_visit_to)
 
     total = query.count()
     sort_column = getattr(Patient, sort_by)
@@ -109,7 +151,7 @@ def get_patient(id: int, db: Session = Depends(get_db)) -> Patient:
     patient = db.get(Patient, id)
     if patient is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=http_status.HTTP_404_NOT_FOUND,
             detail="Patient not found",
         )
 
@@ -121,7 +163,7 @@ def get_patient_summary(id: int, db: Session = Depends(get_db)) -> PatientSummar
     patient = db.get(Patient, id)
     if patient is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=http_status.HTTP_404_NOT_FOUND,
             detail="Patient not found",
         )
 
@@ -153,7 +195,7 @@ def get_patient_summary(id: int, db: Session = Depends(get_db)) -> PatientSummar
 @router.post(
     "/{id}/notes",
     response_model=PatientNoteResponse,
-    status_code=status.HTTP_201_CREATED,
+    status_code=http_status.HTTP_201_CREATED,
 )
 def create_patient_note(
     id: int,
@@ -163,7 +205,7 @@ def create_patient_note(
     patient = db.get(Patient, id)
     if patient is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=http_status.HTTP_404_NOT_FOUND,
             detail="Patient not found",
         )
 
@@ -182,7 +224,7 @@ def list_patient_notes(id: int, db: Session = Depends(get_db)) -> list[PatientNo
     patient = db.get(Patient, id)
     if patient is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=http_status.HTTP_404_NOT_FOUND,
             detail="Patient not found",
         )
 
@@ -204,7 +246,7 @@ def update_patient_note(
     patient = db.get(Patient, id)
     if patient is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=http_status.HTTP_404_NOT_FOUND,
             detail="Patient not found",
         )
 
@@ -215,7 +257,7 @@ def update_patient_note(
     )
     if note is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=http_status.HTTP_404_NOT_FOUND,
             detail="Note not found",
         )
 
@@ -228,7 +270,7 @@ def update_patient_note(
     return note
 
 
-@router.delete("/{id}/notes/{note_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{id}/notes/{note_id}", status_code=http_status.HTTP_204_NO_CONTENT)
 def delete_patient_note(
     id: int,
     note_id: int,
@@ -237,7 +279,7 @@ def delete_patient_note(
     patient = db.get(Patient, id)
     if patient is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=http_status.HTTP_404_NOT_FOUND,
             detail="Patient not found",
         )
 
@@ -248,7 +290,7 @@ def delete_patient_note(
     )
     if note is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=http_status.HTTP_404_NOT_FOUND,
             detail="Note not found",
         )
 
@@ -257,7 +299,7 @@ def delete_patient_note(
     return None
 
 
-@router.post("", response_model=PatientResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=PatientResponse, status_code=http_status.HTTP_201_CREATED)
 def create_patient(
     patient_data: PatientCreate,
     db: Session = Depends(get_db),
@@ -278,7 +320,7 @@ def update_patient(
     patient = db.get(Patient, id)
     if patient is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=http_status.HTTP_404_NOT_FOUND,
             detail="Patient not found",
         )
 
@@ -291,12 +333,12 @@ def update_patient(
     return patient
 
 
-@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{id}", status_code=http_status.HTTP_204_NO_CONTENT)
 def delete_patient(id: int, db: Session = Depends(get_db)) -> None:
     patient = db.get(Patient, id)
     if patient is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=http_status.HTTP_404_NOT_FOUND,
             detail="Patient not found",
         )
 

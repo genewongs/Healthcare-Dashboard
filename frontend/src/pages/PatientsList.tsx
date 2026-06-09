@@ -2,7 +2,9 @@ import {
   Alert,
   Box,
   Button,
+  Chip,
   FormControl,
+  InputAdornment,
   InputLabel,
   MenuItem,
   Pagination,
@@ -14,20 +16,21 @@ import {
 } from "@mui/material";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import {
+  IoAdd,
+  IoClose,
+  IoFilter,
+  IoSearch,
+} from "react-icons/io5";
 import { Link as RouterLink } from "react-router-dom";
 import { getPatients } from "../api/patients";
-import { PatientCard } from "../components/Patients";
-import type { PatientSortField, PatientStatus, SortOrder } from "../types/patient";
-
-type StatusFilter = PatientStatus | "";
-
-const statusOptions: Array<{ label: string; value: StatusFilter }> = [
-  { label: "All statuses", value: "" },
-  { label: "Active", value: "active" },
-  { label: "Inactive", value: "inactive" },
-  { label: "Pending", value: "pending" },
-  { label: "Discharged", value: "discharged" },
-];
+import {
+  formatPatientStatusLabel,
+  PatientCard,
+  PatientFiltersDialog,
+  type PatientAdvancedFilters,
+} from "../components/Patients";
+import type { PatientSortField } from "../types/patient";
 
 const sortOptions: Array<{ label: string; value: PatientSortField }> = [
   { label: "Last name", value: "last_name" },
@@ -39,14 +42,44 @@ const sortOptions: Array<{ label: string; value: PatientSortField }> = [
 
 const pageSizeOptions = [5, 10, 25, 50];
 
+const defaultAdvancedFilters: PatientAdvancedFilters = {
+  ageMax: "",
+  ageMin: "",
+  lastVisitFrom: "",
+  lastVisitTo: "",
+  pageSize: 10,
+  sortOrder: "asc",
+  status: "",
+};
+
+function toOptionalNumber(value: string) {
+  if (!value.trim()) {
+    return undefined;
+  }
+
+  const parsedValue = Number(value);
+  return Number.isFinite(parsedValue) ? parsedValue : undefined;
+}
+
+function getAdvancedFilterCount(filters: PatientAdvancedFilters) {
+  return [
+    filters.status,
+    filters.ageMin,
+    filters.ageMax,
+    filters.lastVisitFrom,
+    filters.lastVisitTo,
+    filters.pageSize !== defaultAdvancedFilters.pageSize,
+    filters.sortOrder !== defaultAdvancedFilters.sortOrder,
+  ].filter(Boolean).length;
+}
+
 export function PatientsList() {
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [status, setStatus] = useState<StatusFilter>("");
   const [sortBy, setSortBy] = useState<PatientSortField>("last_name");
-  const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
+  const [advancedFilters, setAdvancedFilters] = useState(defaultAdvancedFilters);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -59,11 +92,15 @@ export function PatientsList() {
 
   const queryParams = {
     page,
-    page_size: pageSize,
+    page_size: advancedFilters.pageSize,
     search: debouncedSearch,
-    status: status || undefined,
+    status: advancedFilters.status || undefined,
+    age_min: toOptionalNumber(advancedFilters.ageMin),
+    age_max: toOptionalNumber(advancedFilters.ageMax),
+    last_visit_from: advancedFilters.lastVisitFrom || undefined,
+    last_visit_to: advancedFilters.lastVisitTo || undefined,
     sort_by: sortBy,
-    sort_order: sortOrder,
+    sort_order: advancedFilters.sortOrder,
   };
 
   const { data, error, isError, isFetching, isLoading } = useQuery({
@@ -72,23 +109,32 @@ export function PatientsList() {
     placeholderData: keepPreviousData,
   });
 
-  const handleStatusChange = (nextStatus: StatusFilter) => {
-    setStatus(nextStatus);
-    setPage(1);
-  };
-
   const handleSortByChange = (nextSortBy: PatientSortField) => {
     setSortBy(nextSortBy);
     setPage(1);
   };
 
   const handlePageSizeChange = (nextPageSize: number) => {
-    setPageSize(nextPageSize);
+    setAdvancedFilters((current) => ({ ...current, pageSize: nextPageSize }));
     setPage(1);
   };
 
-  const toggleSortOrder = () => {
-    setSortOrder((current) => (current === "asc" ? "desc" : "asc"));
+  const handleApplyFilters = (nextFilters: PatientAdvancedFilters) => {
+    setAdvancedFilters(nextFilters);
+    setFiltersOpen(false);
+    setPage(1);
+  };
+
+  const clearFilter = (key: keyof PatientAdvancedFilters) => {
+    setAdvancedFilters((current) => ({
+      ...current,
+      [key]: defaultAdvancedFilters[key],
+    }));
+    setPage(1);
+  };
+
+  const clearAllAdvancedFilters = () => {
+    setAdvancedFilters(defaultAdvancedFilters);
     setPage(1);
   };
 
@@ -119,71 +165,103 @@ export function PatientsList() {
     <Stack spacing={3}>
       <PatientsHeader total={data?.total} />
 
-      <Stack
-        direction={{ xs: "column", lg: "row" }}
-        spacing={2}
-        sx={{ alignItems: { xs: "stretch", lg: "center" } }}
-      >
-        <TextField
-          label="Search patients"
-          onChange={(event) => setSearch(event.target.value)}
-          size="small"
-          sx={{ flexGrow: 1 }}
-          value={search}
+      <Stack spacing={1.5}>
+        <Box
+          sx={{
+            display: "grid",
+            gap: 1.5,
+            gridTemplateColumns: {
+              xs: "1fr 1fr",
+              md: "minmax(280px, 1fr) 170px 130px 150px auto",
+            },
+          }}
+        >
+          <TextField
+            label="Search patients"
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search patients by name, phone, or email..."
+            size="small"
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <IoSearch />
+                  </InputAdornment>
+                ),
+              },
+            }}
+            sx={{ gridColumn: { xs: "1 / -1", md: "auto" } }}
+            value={search}
+          />
+
+          <FormControl size="small">
+            <InputLabel id="patient-sort-by-label">Sort by</InputLabel>
+            <Select
+              label="Sort by"
+              labelId="patient-sort-by-label"
+              onChange={(event) => handleSortByChange(event.target.value as PatientSortField)}
+              value={sortBy}
+            >
+              {sortOptions.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <FormControl size="small">
+            <InputLabel id="patient-page-size-label">Page size</InputLabel>
+            <Select
+              label="Page size"
+              labelId="patient-page-size-label"
+              onChange={(event) => handlePageSizeChange(Number(event.target.value))}
+              value={String(advancedFilters.pageSize)}
+            >
+              {pageSizeOptions.map((option) => (
+                <MenuItem key={option} value={option}>
+                  {option}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <Button
+            onClick={() => setFiltersOpen(true)}
+            startIcon={<IoFilter />}
+            variant="outlined"
+          >
+            More filters
+            {getAdvancedFilterCount(advancedFilters) > 0
+              ? ` (${getAdvancedFilterCount(advancedFilters)})`
+              : ""}
+          </Button>
+
+          <Button
+            component={RouterLink}
+            startIcon={<IoAdd />}
+            sx={{ whiteSpace: "nowrap" }}
+            to="/patients/new"
+            variant="contained"
+          >
+            Create Patient
+          </Button>
+        </Box>
+
+        <PatientFilterChips
+          filters={advancedFilters}
+          onClearAll={clearAllAdvancedFilters}
+          onClearFilter={clearFilter}
         />
-
-        <FormControl size="small" sx={{ minWidth: 160 }}>
-          <InputLabel id="patient-status-filter-label">Status</InputLabel>
-          <Select
-            label="Status"
-            labelId="patient-status-filter-label"
-            onChange={(event) => handleStatusChange(event.target.value as StatusFilter)}
-            value={status}
-          >
-            {statusOptions.map((option) => (
-              <MenuItem key={option.label} value={option.value}>
-                {option.label}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        <FormControl size="small" sx={{ minWidth: 160 }}>
-          <InputLabel id="patient-sort-by-label">Sort by</InputLabel>
-          <Select
-            label="Sort by"
-            labelId="patient-sort-by-label"
-            onChange={(event) => handleSortByChange(event.target.value as PatientSortField)}
-            value={sortBy}
-          >
-            {sortOptions.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
-                {option.label}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        <Button onClick={toggleSortOrder} size="large" variant="outlined">
-          {sortOrder === "asc" ? "Ascending" : "Descending"}
-        </Button>
-
-        <FormControl size="small" sx={{ minWidth: 120 }}>
-          <InputLabel id="patient-page-size-label">Page size</InputLabel>
-          <Select
-            label="Page size"
-            labelId="patient-page-size-label"
-            onChange={(event) => handlePageSizeChange(Number(event.target.value))}
-            value={String(pageSize)}
-          >
-            {pageSizeOptions.map((option) => (
-              <MenuItem key={option} value={option}>
-                {option}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
       </Stack>
+
+      <PatientFiltersDialog
+        filters={advancedFilters}
+        onApply={handleApplyFilters}
+        onClear={clearAllAdvancedFilters}
+        onClose={() => setFiltersOpen(false)}
+        open={filtersOpen}
+      />
 
       <Box sx={{ minHeight: 260, position: "relative" }}>
         <Box
@@ -266,24 +344,111 @@ function PatientListSkeleton() {
   );
 }
 
+function PatientFilterChips({
+  filters,
+  onClearAll,
+  onClearFilter,
+}: {
+  filters: PatientAdvancedFilters;
+  onClearAll: () => void;
+  onClearFilter: (key: keyof PatientAdvancedFilters) => void;
+}) {
+  const chips: Array<{
+    key: string;
+    label: string;
+    onDelete: () => void;
+  }> = [];
+
+  if (filters.status) {
+    chips.push({
+      key: "status",
+      label: `Status: ${formatPatientStatusLabel(filters.status)}`,
+      onDelete: () => onClearFilter("status"),
+    });
+  }
+
+  if (filters.ageMin || filters.ageMax) {
+    chips.push({
+      key: "age",
+      label: `Age: ${filters.ageMin || "0"}-${filters.ageMax || "130"}`,
+      onDelete: () => {
+        onClearFilter("ageMin");
+        onClearFilter("ageMax");
+      },
+    });
+  }
+
+  if (filters.lastVisitFrom || filters.lastVisitTo) {
+    chips.push({
+      key: "lastVisit",
+      label: `Last visit: ${filters.lastVisitFrom || "Any"} to ${
+        filters.lastVisitTo || "Any"
+      }`,
+      onDelete: () => {
+        onClearFilter("lastVisitFrom");
+        onClearFilter("lastVisitTo");
+      },
+    });
+  }
+
+  if (filters.pageSize !== defaultAdvancedFilters.pageSize) {
+    chips.push({
+      key: "pageSize",
+      label: `${filters.pageSize} / page`,
+      onDelete: () => onClearFilter("pageSize"),
+    });
+  }
+
+  if (filters.sortOrder !== defaultAdvancedFilters.sortOrder) {
+    chips.push({
+      key: "sortOrder",
+      label: filters.sortOrder === "asc" ? "Ascending" : "Descending",
+      onDelete: () => onClearFilter("sortOrder"),
+    });
+  }
+
+  if (chips.length === 0) {
+    return null;
+  }
+
+  return (
+    <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", rowGap: 1 }}>
+      {chips.map((chip) => (
+        <Chip
+          deleteIcon={<IoClose />}
+          key={chip.key}
+          label={chip.label}
+          onDelete={chip.onDelete}
+          variant="outlined"
+        />
+      ))}
+      {chips.length > 1 ? (
+        <Chip label="Clear all" onClick={onClearAll} variant="filled" />
+      ) : null}
+    </Stack>
+  );
+}
+
 function PatientsHeader({ total }: { total?: number }) {
   return (
     <Stack
-      direction={{ xs: "column", sm: "row" }}
+      direction="row"
       spacing={2}
-      sx={{ alignItems: { xs: "flex-start", sm: "center" }, justifyContent: "space-between" }}
+      sx={{
+        alignItems: "center",
+        justifyContent: "space-between",
+      }}
     >
       <Box>
-        <Typography variant="h4">Patients</Typography>
+        <Typography sx={{ fontSize: { xs: 42, sm: 48, md: 34 } }} variant="h4">
+          Patients
+        </Typography>
         <Typography color="text.secondary" variant="body1">
           {typeof total === "number"
             ? `${total} patient${total === 1 ? "" : "s"} found`
             : "Browse patient records"}
         </Typography>
       </Box>
-      <Button component={RouterLink} to="/patients/new" variant="contained">
-        Create Patient
-      </Button>
     </Stack>
   );
 }
