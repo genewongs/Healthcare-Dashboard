@@ -69,11 +69,7 @@ export function addPatientNote(patientId: number, note: PatientNoteCreate) {
   }).then(toPatientNote);
 }
 
-export function updatePatientNote(
-  patientId: number,
-  noteId: number,
-  note: PatientNoteUpdate,
-) {
+export function updatePatientNote(patientId: number, noteId: number, note: PatientNoteUpdate) {
   return apiRequest<PatientNoteApi>(`/patients/${patientId}/notes/${noteId}`, {
     method: "PATCH",
     body: {

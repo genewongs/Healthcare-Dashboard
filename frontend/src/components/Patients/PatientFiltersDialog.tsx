@@ -11,7 +11,7 @@ import {
   Stack,
   TextField,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { PatientStatus, SortOrder } from "../../types/patient";
 
 export type PatientAdvancedFilters = {
@@ -51,12 +51,6 @@ export function PatientFiltersDialog({
 }: PatientFiltersDialogProps) {
   const [draftFilters, setDraftFilters] = useState(filters);
 
-  useEffect(() => {
-    if (open) {
-      setDraftFilters(filters);
-    }
-  }, [filters, open]);
-
   const updateDraft = <Key extends keyof PatientAdvancedFilters>(
     key: Key,
     value: PatientAdvancedFilters[Key],
@@ -74,9 +68,7 @@ export function PatientFiltersDialog({
             <Select
               label="Status"
               labelId="advanced-status-label"
-              onChange={(event) =>
-                updateDraft("status", event.target.value as PatientStatus | "")
-              }
+              onChange={(event) => updateDraft("status", event.target.value as PatientStatus | "")}
               value={draftFilters.status}
             >
               {statusOptions.map((option) => (

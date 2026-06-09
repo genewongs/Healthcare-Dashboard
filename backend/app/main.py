@@ -2,8 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import models  # Registers SQLAlchemy models with Base.metadata.
-from app.api.health import router as health_router
 from app.database import Base, SessionLocal, engine
+from app.routers.health import router as health_router
 from app.routers.patients import router as patients_router
 from app.seed import seed_patients
 

@@ -21,7 +21,6 @@ import { useState, type ReactNode } from "react";
 import {
   IoCalendarOutline,
   IoCallOutline,
-  IoDocumentTextOutline,
   IoFitnessOutline,
   IoHomeOutline,
   IoMailOutline,
@@ -84,11 +83,7 @@ function FieldValue({
   value?: string | null;
 }) {
   return (
-    <Stack
-      direction="row"
-      spacing={1.5}
-      sx={{ alignItems: "flex-start", minWidth: 0 }}
-    >
+    <Stack direction="row" spacing={1.5} sx={{ alignItems: "flex-start", minWidth: 0 }}>
       <Box
         sx={{
           alignItems: "center",
@@ -147,9 +142,7 @@ function PatientSection({
       <CardContent>
         <Stack spacing={2}>
           <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
-            <Box sx={{ color: "primary.main", display: "flex", fontSize: 24 }}>
-              {icon}
-            </Box>
+            <Box sx={{ color: "primary.main", display: "flex", fontSize: 24 }}>{icon}</Box>
             <Typography variant="h6">{title}</Typography>
           </Stack>
           <Divider />
@@ -226,8 +219,16 @@ export function PatientDetailPage() {
   const fullName = `${patient.first_name} ${patient.last_name}`;
   const personalFields = (
     <>
-      <FieldValue icon={<IoPersonOutline />} label="Age" value={calculateAge(patient.date_of_birth)} />
-      <FieldValue icon={<IoCalendarOutline />} label="Date of birth" value={formatDate(patient.date_of_birth)} />
+      <FieldValue
+        icon={<IoPersonOutline />}
+        label="Age"
+        value={calculateAge(patient.date_of_birth)}
+      />
+      <FieldValue
+        icon={<IoCalendarOutline />}
+        label="Date of birth"
+        value={formatDate(patient.date_of_birth)}
+      />
       <FieldValue icon={<IoCallOutline />} label="Phone" value={patient.phone} />
       <FieldValue icon={<IoMailOutline />} label="Email" value={patient.email} />
       <FieldValue icon={<IoHomeOutline />} label="Address" value={patient.address} />
@@ -242,8 +243,16 @@ export function PatientDetailPage() {
     <>
       <FieldValue icon={<IoWaterOutline />} label="Blood type" value={patient.blood_type} />
       <FieldValue icon={<IoMedkitOutline />} label="Conditions" value={patient.conditions} />
-      <FieldValue icon={<IoFitnessOutline />} label="Allergies" value={formatAllergies(patient.allergies)} />
-      <FieldValue icon={<IoCalendarOutline />} label="Last visit" value={formatDate(patient.last_visit)} />
+      <FieldValue
+        icon={<IoFitnessOutline />}
+        label="Allergies"
+        value={formatAllergies(patient.allergies)}
+      />
+      <FieldValue
+        icon={<IoCalendarOutline />}
+        label="Last visit"
+        value={formatDate(patient.last_visit)}
+      />
     </>
   );
 
@@ -256,85 +265,84 @@ export function PatientDetailPage() {
         </Box>
 
         <Stack direction="row" spacing={1.5} sx={{ alignItems: "flex-start", minWidth: 0 }}>
-            <Avatar
+          <Avatar
+            sx={{
+              bgcolor: "primary.light",
+              color: "primary.main",
+              flexShrink: 0,
+              fontSize: { xs: 18, sm: 24, md: 30 },
+              fontWeight: 800,
+              height: { xs: 48, sm: 64, md: 88 },
+              mt: { xs: 0.5, md: 0 },
+              width: { xs: 48, sm: 64, md: 88 },
+            }}
+          >
+            {getInitials(patient)}
+          </Avatar>
+          <Stack spacing={1} sx={{ flexGrow: 1, minWidth: 0 }}>
+            <Stack
+              direction={{ xs: "row", sm: "row" }}
+              spacing={1}
               sx={{
-                bgcolor: "primary.light",
-                color: "primary.main",
-                flexShrink: 0,
-                fontSize: { xs: 18, sm: 24, md: 30 },
-                fontWeight: 800,
-                height: { xs: 48, sm: 64, md: 88 },
-                mt: { xs: 0.5, md: 0 },
-                width: { xs: 48, sm: 64, md: 88 },
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                minWidth: 0,
               }}
             >
-              {getInitials(patient)}
-            </Avatar>
-            <Stack spacing={1} sx={{ flexGrow: 1, minWidth: 0 }}>
               <Stack
-                direction={{ xs: "row", sm: "row" }}
+                direction="row"
                 spacing={1}
-                sx={{
-                  alignItems: "flex-start",
-                  justifyContent: "space-between",
-                  minWidth: 0,
-                }}
+                sx={{ alignItems: "center", flexWrap: "wrap", minWidth: 0 }}
               >
-                <Stack
-                  direction="row"
-                  spacing={1}
-                  sx={{ alignItems: "center", flexWrap: "wrap", minWidth: 0 }}
+                <Typography
+                  sx={{
+                    fontSize: { xs: 30, sm: 34, md: 42 },
+                    lineHeight: 1.08,
+                    overflowWrap: "anywhere",
+                  }}
+                  variant="h4"
                 >
-                  <Typography
-                    sx={{
-                      fontSize: { xs: 30, sm: 34, md: 42 },
-                      lineHeight: 1.08,
-                      overflowWrap: "anywhere",
-                    }}
-                    variant="h4"
-                  >
-                    {fullName}
-                  </Typography>
-                  <PatientStatusChip status={patient.status} />
-                </Stack>
-                <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
-                  <IconButton
-                    aria-label={`Edit ${fullName}`}
-                    color="primary"
-                    component={RouterLink}
-                    sx={{
-                      border: 1,
-                      borderColor: "divider",
-                      bgcolor: "background.paper",
-                      height: { xs: 38, sm: 44, md: 48 },
-                      width: { xs: 38, sm: 44, md: 48 },
-                    }}
-                    to={`/patients/${patient.id}/edit`}
-                  >
-                    <MdOutlineModeEditOutline size={22} />
-                  </IconButton>
-                  <IconButton
-                    aria-label={`Delete ${fullName}`}
-                    color="error"
-                    onClick={() => setDeleteDialogOpen(true)}
-                    sx={{
-                      border: 1,
-                      borderColor: "divider",
-                      bgcolor: "background.paper",
-                      height: { xs: 38, sm: 44, md: 48 },
-                      width: { xs: 38, sm: 44, md: 48 },
-                    }}
-                  >
-                    <RiDeleteBinLine size={22} />
-                  </IconButton>
-                </Stack>
+                  {fullName}
+                </Typography>
+                <PatientStatusChip status={patient.status} />
               </Stack>
-              <Typography color="text.secondary" variant="body1">
-                {calculateAge(patient.date_of_birth)} years old · DOB{" "}
-                {formatDate(patient.date_of_birth)} · Last visit{" "}
-                {formatDate(patient.last_visit)}
-              </Typography>
+              <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
+                <IconButton
+                  aria-label={`Edit ${fullName}`}
+                  color="primary"
+                  component={RouterLink}
+                  sx={{
+                    border: 1,
+                    borderColor: "divider",
+                    bgcolor: "background.paper",
+                    height: { xs: 38, sm: 44, md: 48 },
+                    width: { xs: 38, sm: 44, md: 48 },
+                  }}
+                  to={`/patients/${patient.id}/edit`}
+                >
+                  <MdOutlineModeEditOutline size={22} />
+                </IconButton>
+                <IconButton
+                  aria-label={`Delete ${fullName}`}
+                  color="error"
+                  onClick={() => setDeleteDialogOpen(true)}
+                  sx={{
+                    border: 1,
+                    borderColor: "divider",
+                    bgcolor: "background.paper",
+                    height: { xs: 38, sm: 44, md: 48 },
+                    width: { xs: 38, sm: 44, md: 48 },
+                  }}
+                >
+                  <RiDeleteBinLine size={22} />
+                </IconButton>
+              </Stack>
             </Stack>
+            <Typography color="text.secondary" variant="body1">
+              {calculateAge(patient.date_of_birth)} years old · DOB{" "}
+              {formatDate(patient.date_of_birth)} · Last visit {formatDate(patient.last_visit)}
+            </Typography>
+          </Stack>
         </Stack>
       </Stack>
 

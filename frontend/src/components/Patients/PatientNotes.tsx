@@ -190,9 +190,7 @@ export function PatientNotes({ patientId }: PatientNotesProps) {
                 <Select
                   label="Category"
                   labelId="note-category-label"
-                  onChange={(event) =>
-                    setCategory(event.target.value as PatientNoteCategory)
-                  }
+                  onChange={(event) => setCategory(event.target.value as PatientNoteCategory)}
                   value={category}
                 >
                   {noteCategories.map((option) => (
@@ -220,9 +218,7 @@ export function PatientNotes({ patientId }: PatientNotesProps) {
                 {addNoteMutation.isPending ? "Adding..." : "Add note"}
               </Button>
             </Stack>
-            {addNoteMutation.isError ? (
-              <Alert severity="error">{addNoteErrorMessage}</Alert>
-            ) : null}
+            {addNoteMutation.isError ? <Alert severity="error">{addNoteErrorMessage}</Alert> : null}
           </Stack>
 
           <Divider />
@@ -245,16 +241,12 @@ export function PatientNotes({ patientId }: PatientNotesProps) {
                 <Card
                   key={note.id}
                   onClick={() =>
-                    setExpandedNoteId((currentId) =>
-                      currentId === note.id ? null : note.id,
-                    )
+                    setExpandedNoteId((currentId) => (currentId === note.id ? null : note.id))
                   }
                   onKeyDown={(event) => {
                     if (event.key === "Enter" || event.key === " ") {
                       event.preventDefault();
-                      setExpandedNoteId((currentId) =>
-                        currentId === note.id ? null : note.id,
-                      );
+                      setExpandedNoteId((currentId) => (currentId === note.id ? null : note.id));
                     }
                   }}
                   role="button"
@@ -290,12 +282,7 @@ export function PatientNotes({ patientId }: PatientNotesProps) {
                             sx={{ alignItems: "center", flexWrap: "wrap" }}
                           >
                             {note.isPinned ? (
-                              <Chip
-                                color="warning"
-                                icon={<IoFlag />}
-                                label="Pinned"
-                                size="small"
-                              />
+                              <Chip color="warning" icon={<IoFlag />} label="Pinned" size="small" />
                             ) : null}
                             <Chip
                               label={formatCategoryLabel(note.category)}
@@ -406,15 +393,10 @@ export function PatientNotes({ patientId }: PatientNotesProps) {
       >
         <DialogTitle>Delete note?</DialogTitle>
         <DialogContent>
-          <DialogContentText>
-            This will permanently delete this patient note.
-          </DialogContentText>
+          <DialogContentText>This will permanently delete this patient note.</DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button
-            disabled={deleteNoteMutation.isPending}
-            onClick={() => setNoteToDelete(null)}
-          >
+          <Button disabled={deleteNoteMutation.isPending} onClick={() => setNoteToDelete(null)}>
             Cancel
           </Button>
           <Button

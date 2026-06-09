@@ -18,10 +18,6 @@ export function formatPatientStatusLabel(status: PatientStatus) {
 
 export function PatientStatusChip({ status }: PatientStatusChipProps) {
   return (
-    <Chip
-      color={statusColors[status]}
-      label={formatPatientStatusLabel(status)}
-      size="small"
-    />
+    <Chip color={statusColors[status]} label={formatPatientStatusLabel(status)} size="small" />
   );
 }

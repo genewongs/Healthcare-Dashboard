@@ -166,11 +166,7 @@ export function AppLayout() {
               Healthcare Dashboard
             </Typography>
           </Stack>
-          <Stack
-            direction="row"
-            spacing={1.25}
-            sx={{ alignItems: "center", ml: "auto" }}
-          >
+          <Stack direction="row" spacing={1.25} sx={{ alignItems: "center", ml: "auto" }}>
             <Tooltip title={mode === "dark" ? "Switch to light mode" : "Switch to dark mode"}>
               <IconButton
                 aria-label={mode === "dark" ? "Switch to light mode" : "Switch to dark mode"}

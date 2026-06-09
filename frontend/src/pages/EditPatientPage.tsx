@@ -101,9 +101,7 @@ export function EditPatientPage() {
             : undefined
         }
         serverFieldErrors={
-          updateMutation.isError
-            ? getPatientFormServerFieldErrors(updateMutation.error)
-            : undefined
+          updateMutation.isError ? getPatientFormServerFieldErrors(updateMutation.error) : undefined
         }
       />
     </Stack>

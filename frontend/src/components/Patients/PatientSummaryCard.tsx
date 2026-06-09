@@ -17,12 +17,7 @@ type PatientSummaryCardProps = {
 };
 
 export function PatientSummaryCard({ patientId }: PatientSummaryCardProps) {
-  const {
-    data,
-    error,
-    isError,
-    isLoading,
-  } = useQuery({
+  const { data, error, isError, isLoading } = useQuery({
     queryKey: ["patient-summary", patientId],
     queryFn: () => getPatientSummary(patientId),
   });

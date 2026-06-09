@@ -1,8 +1,5 @@
 export { PatientCard } from "./PatientCard";
-export {
-  PatientFiltersDialog,
-  type PatientAdvancedFilters,
-} from "./PatientFiltersDialog";
+export { PatientFiltersDialog, type PatientAdvancedFilters } from "./PatientFiltersDialog";
 export {
   PatientForm,
   type PatientFormProps,

@@ -55,9 +55,7 @@ export function CreatePatientPage() {
             : undefined
         }
         serverFieldErrors={
-          createMutation.isError
-            ? getPatientFormServerFieldErrors(createMutation.error)
-            : undefined
+          createMutation.isError ? getPatientFormServerFieldErrors(createMutation.error) : undefined
         }
       />
     </Stack>

@@ -1,12 +1,4 @@
-import {
-  Avatar,
-  Box,
-  Card,
-  CardActionArea,
-  CardContent,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { Avatar, Box, Card, CardActionArea, CardContent, Stack, Typography } from "@mui/material";
 import { IoCallOutline, IoCalendarOutline, IoEllipsisVertical } from "react-icons/io5";
 import { Link as RouterLink } from "react-router-dom";
 import type { Patient } from "../../types/patient";

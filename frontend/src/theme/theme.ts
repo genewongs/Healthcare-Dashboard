@@ -68,8 +68,7 @@ export function createAppTheme(mode: PaletteMode) {
             transition: "background-color 220ms ease, color 220ms ease",
           },
           "*": {
-            transitionProperty:
-              "background-color, border-color, box-shadow, color, fill, stroke",
+            transitionProperty: "background-color, border-color, box-shadow, color, fill, stroke",
             transitionDuration: "220ms",
             transitionTimingFunction: "ease",
           },

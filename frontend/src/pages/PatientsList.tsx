@@ -16,12 +16,7 @@ import {
 } from "@mui/material";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import {
-  IoAdd,
-  IoClose,
-  IoFilter,
-  IoSearch,
-} from "react-icons/io5";
+import { IoAdd, IoClose, IoFilter, IoSearch } from "react-icons/io5";
 import { Link as RouterLink } from "react-router-dom";
 import { getPatients } from "../api/patients";
 import {
@@ -228,11 +223,7 @@ export function PatientsList() {
             </Select>
           </FormControl>
 
-          <Button
-            onClick={() => setFiltersOpen(true)}
-            startIcon={<IoFilter />}
-            variant="outlined"
-          >
+          <Button onClick={() => setFiltersOpen(true)} startIcon={<IoFilter />} variant="outlined">
             More filters
             {getAdvancedFilterCount(advancedFilters) > 0
               ? ` (${getAdvancedFilterCount(advancedFilters)})`
@@ -257,13 +248,15 @@ export function PatientsList() {
         />
       </Stack>
 
-      <PatientFiltersDialog
-        filters={advancedFilters}
-        onApply={handleApplyFilters}
-        onClear={clearAllAdvancedFilters}
-        onClose={() => setFiltersOpen(false)}
-        open={filtersOpen}
-      />
+      {filtersOpen ? (
+        <PatientFiltersDialog
+          filters={advancedFilters}
+          onApply={handleApplyFilters}
+          onClear={clearAllAdvancedFilters}
+          onClose={() => setFiltersOpen(false)}
+          open={filtersOpen}
+        />
+      ) : null}
 
       <Box sx={{ minHeight: 260, position: "relative" }}>
         <Box
@@ -383,9 +376,7 @@ function PatientFilterChips({
   if (filters.lastVisitFrom || filters.lastVisitTo) {
     chips.push({
       key: "lastVisit",
-      label: `Last visit: ${filters.lastVisitFrom || "Any"} to ${
-        filters.lastVisitTo || "Any"
-      }`,
+      label: `Last visit: ${filters.lastVisitFrom || "Any"} to ${filters.lastVisitTo || "Any"}`,
       onDelete: () => {
         onClearFilter("lastVisitFrom");
         onClearFilter("lastVisitTo");
@@ -424,9 +415,7 @@ function PatientFilterChips({
           variant="outlined"
         />
       ))}
-      {chips.length > 1 ? (
-        <Chip label="Clear all" onClick={onClearAll} variant="filled" />
-      ) : null}
+      {chips.length > 1 ? <Chip label="Clear all" onClick={onClearAll} variant="filled" /> : null}
     </Stack>
   );
 }

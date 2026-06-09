@@ -1,12 +1,4 @@
-import {
-  Alert,
-  Box,
-  Card,
-  CardContent,
-  CircularProgress,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { Alert, Box, Card, CardContent, CircularProgress, Stack, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import {
@@ -73,7 +65,7 @@ function StatusMetricCard({ metric }: { metric: StatusMetric }) {
             {metric.icon}
           </Box>
           <Box sx={{ minWidth: 0 }}>
-            <Typography color="text.secondary" sx={{ fontWeight: 'bold' }} variant="body2">
+            <Typography color="text.secondary" sx={{ fontWeight: "bold" }} variant="body2">
               {metric.label}
             </Typography>
             <Typography sx={{ fontWeight: 850, lineHeight: 1.1 }} variant="h5">

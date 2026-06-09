@@ -27,20 +27,23 @@ const optionalPhone = z.string().trim().max(30, "Phone must be 30 characters or 
 const optionalAddress = z.string().trim().max(500, "Address must be 500 characters or fewer");
 const optionalConditions = z.string().trim().max(500, "Conditions must be 500 characters or fewer");
 
-const optionalEmail = z.string().trim().refine(
-  (value) => value === "" || z.email().safeParse(value).success,
-  "Enter a valid email address",
-);
+const optionalEmail = z
+  .string()
+  .trim()
+  .refine(
+    (value) => value === "" || z.email().safeParse(value).success,
+    "Enter a valid email address",
+  );
 
-const optionalDate = z.string().refine(
-  (value) => value === "" || !Number.isNaN(Date.parse(value)),
-  "Enter a valid date",
-);
+const optionalDate = z
+  .string()
+  .refine((value) => value === "" || !Number.isNaN(Date.parse(value)), "Enter a valid date");
 
-const requiredDate = z.string().trim().min(1, "Last visit is required").refine(
-  (value) => !Number.isNaN(Date.parse(value)),
-  "Enter a valid date",
-);
+const requiredDate = z
+  .string()
+  .trim()
+  .min(1, "Last visit is required")
+  .refine((value) => !Number.isNaN(Date.parse(value)), "Enter a valid date");
 
 const patientFormSchema = z.object({
   first_name: z
@@ -74,13 +77,7 @@ export type PatientFormValues = z.infer<typeof patientFormSchema>;
 
 export type PatientFormSubmitValues = Omit<
   PatientFormValues,
-  | "date_of_birth"
-  | "phone"
-  | "email"
-  | "address"
-  | "blood_type"
-  | "conditions"
-  | "last_visit"
+  "date_of_birth" | "phone" | "email" | "address" | "blood_type" | "conditions" | "last_visit"
 > & {
   date_of_birth: string | null;
   phone: string | null;
@@ -133,10 +130,7 @@ function toFormValues(values?: Patient | Partial<PatientFormValues>): PatientFor
   };
 }
 
-function fieldError(
-  clientError: string | undefined,
-  serverError: string | undefined,
-) {
+function fieldError(clientError: string | undefined, serverError: string | undefined) {
   return clientError ?? serverError;
 }
 
@@ -320,7 +314,9 @@ export function PatientForm({
             <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
               <TextField
                 {...register("first_name")}
-                error={Boolean(fieldError(errors.first_name?.message, serverFieldErrors.first_name))}
+                error={Boolean(
+                  fieldError(errors.first_name?.message, serverFieldErrors.first_name),
+                )}
                 fullWidth
                 helperText={fieldError(errors.first_name?.message, serverFieldErrors.first_name)}
                 label="First name"
@@ -365,7 +361,10 @@ export function PatientForm({
                       fieldError(errors.last_visit?.message, serverFieldErrors.last_visit),
                     )}
                     fullWidth
-                    helperText={fieldError(errors.last_visit?.message, serverFieldErrors.last_visit)}
+                    helperText={fieldError(
+                      errors.last_visit?.message,
+                      serverFieldErrors.last_visit,
+                    )}
                     label="Last visit"
                     type="date"
                     slotProps={{ inputLabel: { shrink: true } }}

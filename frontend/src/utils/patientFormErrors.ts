@@ -1,8 +1,5 @@
 import { ApiError, getApiErrorMessage } from "../api/client";
-import type {
-  PatientFormServerErrors,
-  PatientFormSubmitValues,
-} from "../components/Patients";
+import type { PatientFormServerErrors, PatientFormSubmitValues } from "../components/Patients";
 
 const patientFormFields = new Set<keyof PatientFormSubmitValues>([
   "first_name",

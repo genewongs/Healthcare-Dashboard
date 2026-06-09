@@ -2,7 +2,7 @@
 
 Full-stack healthcare dashboard take-home assessment for managing patient records, notes, and deterministic patient summaries.
 
-The app focuses on the core assessment requirements: patient CRUD, search/filter/sort/pagination, notes, summary generation, PostgreSQL persistence, and a Docker Compose local workflow. It intentionally avoids auth, real LLM integration, and stretch goals to keep scope aligned with the assessment.
+The app focuses on the core assessment requirements: patient CRUD, search/filter/sort/pagination, notes, summary generation, PostgreSQL persistence, and a Docker Compose local workflow. It intentionally avoids auth and real LLM integration to keep scope aligned with the assessment, while including a few focused UI stretch goals such as dark/light theme switching, advanced filters, and patient status visualization.
 
 ## Tech Stack
 
@@ -18,6 +18,7 @@ The app focuses on the core assessment requirements: patient CRUD, search/filter
 - The patient summary endpoint is deterministic and template-based, not LLM-backed.
 - The frontend keeps API calls in `src/api`, shared types in `src/types`, and reusable UI components under `src/components`.
 - React Query owns frontend server state for fetching, cache invalidation, and mutation refreshes.
+- The frontend includes ESLint and Prettier for TypeScript linting and formatting checks.
 
 ## Run With Docker
 
@@ -60,6 +61,18 @@ Backend:
 DATABASE_URL=postgresql://postgres:postgres@db:5432/healthcare_dashboard
 ```
 
+## Frontend Tooling
+
+From `frontend/`:
+
+```sh
+npm run lint
+npm run format:check
+npm run build
+```
+
+Use `npm run format` to apply Prettier formatting.
+
 ## Backend API
 
 Health:
@@ -80,6 +93,10 @@ Patient list query parameters:
 - `page_size`
 - `search`
 - `status`
+- `age_min`
+- `age_max`
+- `last_visit_from`
+- `last_visit_to`
 - `sort_by`
 - `sort_order`
 
@@ -97,7 +114,7 @@ Patient summary:
 ## Frontend Routes
 
 - `/` - dashboard placeholder
-- `/patients` - patient list with search, filter, sort, and pagination
+- `/patients` - patient list with search, advanced filters, sort, pagination, dark/light theme toggle, and patient status visualization
 - `/patients/new` - create patient
 - `/patients/:id` - patient detail, notes, summary, delete action
 - `/patients/:id/edit` - edit patient
@@ -115,6 +132,7 @@ This keeps local setup fast and predictable while avoiding duplicate records acr
 - The summary endpoint is deterministic and template-based, so it is reliable but not semantically rich like a real LLM summary.
 - Frontend filtering, sorting, search, and pagination are server-backed, but query params are kept in local component state instead of URL state.
 - The frontend currently uses Vite dev server in Docker, which is convenient for local review but not a production deployment setup.
+- Dark/light theme preference is kept in local React state for this take-home rather than persisted to storage.
 - Automated tests were intentionally skipped to preserve iteration speed and stay within the requested scope.
 
 ## Intentionally Skipped
@@ -123,7 +141,6 @@ This keeps local setup fast and predictable while avoiding duplicate records acr
 - Real LLM integration
 - Production deployment configuration
 - Alembic migrations
-- Advanced dashboard analytics
 - File uploads
 - Role-based access controls
-- Stretch goals beyond the core assessment
+- Broad stretch goals beyond the focused UI additions already included
