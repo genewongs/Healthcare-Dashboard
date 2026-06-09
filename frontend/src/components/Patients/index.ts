@@ -12,4 +12,5 @@ export {
 } from "./PatientForm";
 export { PatientNotes } from "./PatientNotes";
 export { formatPatientStatusLabel, PatientStatusChip } from "./PatientStatusChip";
+export { PatientStatusOverview } from "./PatientStatusOverview";
 export { PatientSummaryCard } from "./PatientSummaryCard";

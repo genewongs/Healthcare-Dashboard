@@ -28,6 +28,7 @@ import {
   formatPatientStatusLabel,
   PatientCard,
   PatientFiltersDialog,
+  PatientStatusOverview,
   type PatientAdvancedFilters,
 } from "../components/Patients";
 import type { PatientSortField } from "../types/patient";
@@ -164,6 +165,7 @@ export function PatientsList() {
   return (
     <Stack spacing={3}>
       <PatientsHeader total={data?.total} />
+      <PatientStatusOverview />
 
       <Stack spacing={1.5}>
         <Box

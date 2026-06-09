@@ -4,6 +4,7 @@ import {
   Card,
   CardContent,
   CircularProgress,
+  Divider,
   Stack,
   Typography,
 } from "@mui/material";
@@ -32,14 +33,15 @@ export function PatientSummaryCard({ patientId }: PatientSummaryCardProps) {
     <Card variant="outlined">
       <CardContent>
         <Stack spacing={2}>
-          <Stack spacing={0.5}>
+          <Stack spacing={2}>
             <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
               <Box sx={{ color: "primary.main", display: "flex", fontSize: 24 }}>
                 <IoDocumentTextOutline />
               </Box>
               <Typography variant="h6">Patient Summary</Typography>
             </Stack>
-            <Typography color="text.secondary" variant="body2">
+            <Divider />
+            <Typography color="text.secondary" variant="caption">
               Template-generated overview based on patient details and notes.
             </Typography>
           </Stack>
@@ -53,9 +55,13 @@ export function PatientSummaryCard({ patientId }: PatientSummaryCardProps) {
           {isError ? <Alert severity="error">{errorMessage}</Alert> : null}
 
           {!isLoading && !isError && data ? (
-            <Typography sx={{ whiteSpace: "pre-line" }} variant="body1">
-              {data.summary}
-            </Typography>
+            <Card variant="outlined">
+              <Stack spacing={2}>
+                <Typography sx={{ whiteSpace: "pre-line", padding: 1.5 }} variant="body1">
+                  {data.summary}
+                </Typography>
+              </Stack>
+            </Card>
           ) : null}
         </Stack>
       </CardContent>

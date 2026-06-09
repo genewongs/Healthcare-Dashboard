@@ -21,10 +21,13 @@ import {
   IoChevronForward,
   IoHomeOutline,
   IoMenu,
+  IoMoon,
   IoPeopleOutline,
   IoShieldCheckmarkOutline,
+  IoSunny,
 } from "react-icons/io5";
 import { NavLink, Outlet } from "react-router-dom";
+import { useThemeMode } from "../../theme/themeMode";
 
 const expandedDrawerWidth = 240;
 const collapsedDrawerWidth = 72;
@@ -102,6 +105,7 @@ export function AppLayout() {
   const [desktopCollapsed, setDesktopCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const theme = useTheme();
+  const { mode, toggleMode } = useThemeMode();
   const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
   const desktopDrawerWidth = desktopCollapsed ? collapsedDrawerWidth : expandedDrawerWidth;
 
@@ -114,7 +118,10 @@ export function AppLayout() {
       <AppBar
         position="fixed"
         sx={{
-          background: "linear-gradient(90deg, #ffffff 0%, #f4f1ff 55%, #ffffff 100%)",
+          background:
+            mode === "dark"
+              ? "linear-gradient(90deg, #090f1f 0%, #191339 55%, #090f1f 100%)"
+              : "linear-gradient(90deg, #b0b2ff 0%, #ffffff 55%, #ffffff 100%)",
           color: "text.primary",
           zIndex: (muiTheme) => muiTheme.zIndex.drawer + 1,
         }}
@@ -135,7 +142,7 @@ export function AppLayout() {
               aria-label={desktopCollapsed ? "Expand navigation" : "Collapse navigation"}
               edge="start"
               onClick={toggleDesktopDrawer}
-              sx={{ color: "text.secondary", mr: 1.5 }}
+              sx={{ color: "text.primary", mr: 1.5 }}
             >
               {desktopCollapsed ? <IoChevronForward /> : <IoChevronBack />}
             </IconButton>
@@ -164,6 +171,25 @@ export function AppLayout() {
             spacing={1.25}
             sx={{ alignItems: "center", ml: "auto" }}
           >
+            <Tooltip title={mode === "dark" ? "Switch to light mode" : "Switch to dark mode"}>
+              <IconButton
+                aria-label={mode === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                onClick={toggleMode}
+                sx={{
+                  bgcolor: "background.paper",
+                  border: 1,
+                  borderColor: "divider",
+                  color: "primary.main",
+                  height: 38,
+                  width: 38,
+                  "&:hover": {
+                    bgcolor: "primary.light",
+                  },
+                }}
+              >
+                {mode === "dark" ? <IoSunny /> : <IoMoon />}
+              </IconButton>
+            </Tooltip>
             <Avatar
               sx={{
                 bgcolor: "primary.main",
