@@ -74,7 +74,7 @@ export function EditPatientPage() {
         <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", flexWrap: "wrap" }}>
           <CircularBackButton ariaLabel="Back to patient" to={`/patients/${patient.id}`} />
           <Typography variant="h4">
-            Edit {patient.first_name} {patient.last_name}
+            {patient.first_name} {patient.last_name}
           </Typography>
         </Stack>
         <Typography color="text.secondary" variant="body1">
