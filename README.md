@@ -6,20 +6,21 @@ The app focuses on the core assessment requirements: patient CRUD, search/filter
 
 ## Tech Stack
 
-- Frontend: React, TypeScript, Vite, Material UI, React Router, TanStack Query, React Hook Form, Zod
+- Frontend: React, TypeScript, Vite, Material UI, React Router, TanStack Query, React Hook Form, Zod, Recharts
 - Backend: FastAPI, SQLAlchemy, Pydantic, PostgreSQL
 - Local development: Docker Compose
 
 ## Architecture Decisions
 
 - The backend uses synchronous FastAPI + SQLAlchemy for a simple, readable take-home implementation.
-- Tables are created on startup with `Base.metadata.create_all()` instead of Alembic migrations.
+- Database schema is managed with Alembic migrations. Docker runs `alembic upgrade head` before starting the API.
 - Seed data is idempotent and runs at startup after tables are created.
 - The patient summary endpoint is deterministic and template-based, not LLM-backed.
 - The frontend keeps API calls in `src/api`, shared types in `src/types`, and reusable UI components under `src/components`.
 - React Query owns frontend server state for fetching, cache invalidation, and mutation refreshes.
 - The frontend includes ESLint and Prettier for TypeScript linting and formatting checks.
-- Patient status visualization uses a dedicated aggregate endpoint instead of multiple list requests.
+- Dashboard visualizations use dedicated aggregate endpoints instead of fetching patient rows into the browser.
+- Patient list filtering and sorting remain offset-based for simple UX, with database indexes added for common filters, sorts, and text search.
 
 ## Run With Docker
 
@@ -37,6 +38,13 @@ Then open:
 - PostgreSQL: localhost:5433
 
 PostgreSQL is exposed on host port `5433` to avoid conflicts with local Postgres installs. Inside Docker, the backend connects to the database through the Compose service name `db` on port `5432`.
+
+If you have an older local Docker volume from before Alembic was added, reset it once so migrations can own the schema history:
+
+```sh
+docker compose down -v
+docker compose up --build
+```
 
 ## Environment Variables
 
@@ -61,6 +69,19 @@ Backend:
 ```sh
 DATABASE_URL=postgresql://postgres:postgres@db:5432/healthcare_dashboard
 ```
+
+## Database Migrations
+
+Docker runs migrations automatically before the backend starts.
+
+To run migrations locally:
+
+```sh
+cd backend
+alembic upgrade head
+```
+
+The initial migration creates the patient and note tables, enables PostgreSQL `pg_trgm`, and adds indexes for status, date of birth, last visit, last name sorting, note lookup, and text search.
 
 ## Frontend Tooling
 
@@ -113,10 +134,14 @@ Patient summary:
 
 - `GET /patients/{id}/summary`
 
+Dashboard:
+
+- `GET /dashboard/stats`
+
 ## Frontend Routes
 
-- `/` - dashboard placeholder
-- `/patients` - patient list with search, advanced filters, sort, pagination, dark/light theme toggle, and patient status visualization
+- `/` - dashboard with patient totals, status distribution, age demographics, blood type distribution, and top conditions
+- `/patients` - patient list with search, advanced filters, sort, pagination, and dark/light theme toggle
 - `/patients/new` - create patient
 - `/patients/:id` - patient detail, notes, summary, delete action
 - `/patients/:id/edit` - edit patient
@@ -124,15 +149,22 @@ Patient summary:
 
 ## Seed Data
 
-The backend seeds 20 realistic patients on startup after tables are created. Seeding is idempotent: it only runs when the patients table has no existing records.
+The backend seeds 400,000 deterministic sample patients on startup after tables are created. Seeding is idempotent: it only runs when the patients table has no existing records.
 
-This keeps local setup fast and predictable while avoiding duplicate records across app restarts.
+This provides enough data to test pagination, search, sorting, filtering, and status visualization behavior at a larger scale while avoiding duplicate records across app restarts.
+
+To reseed an existing local Docker database from scratch:
+
+```sh
+docker compose down -v
+docker compose up --build
+```
 
 ## Known Tradeoffs
 
-- `Base.metadata.create_all()` is acceptable for this take-home, but Alembic migrations would be better in production.
 - The summary endpoint is deterministic and template-based, so it is reliable but not semantically rich like a real LLM summary.
 - Frontend filtering, sorting, search, and pagination are server-backed, but query params are kept in local component state instead of URL state.
+- Offset pagination is retained because the patient list uses direct page controls and page counts. For very deep navigation over millions of rows, cursor pagination would be the better next step.
 - The frontend currently uses Vite dev server in Docker, which is convenient for local review but not a production deployment setup.
 - Dark/light theme preference is kept in local React state for this take-home rather than persisted to storage.
 - Automated tests were intentionally skipped to preserve iteration speed and stay within the requested scope.
@@ -142,7 +174,6 @@ This keeps local setup fast and predictable while avoiding duplicate records acr
 - Authentication and authorization
 - Real LLM integration
 - Production deployment configuration
-- Alembic migrations
 - File uploads
 - Role-based access controls
 - Broad stretch goals beyond the focused UI additions already included

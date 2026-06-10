@@ -263,6 +263,7 @@ export function AppLayout() {
         sx={{
           flexGrow: 1,
           minWidth: 0,
+          overflowX: "hidden",
           p: { xs: 2, sm: 3, lg: 4 },
           transition: (muiTheme) =>
             muiTheme.transitions.create("width", {

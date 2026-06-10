@@ -12,17 +12,17 @@ PatientNoteCategory = Literal["general", "medication", "follow_up", "concern"]
 class PatientBase(BaseModel):
     first_name: str = Field(min_length=1, max_length=100)
     last_name: str = Field(min_length=1, max_length=100)
-    date_of_birth: date | None = None
-    phone: str | None = Field(default=None, max_length=30)
+    date_of_birth: date
+    phone: str = Field(min_length=1, max_length=30)
     email: EmailStr | None = None
-    address: str | None = None
-    blood_type: BloodType | None = None
-    allergies: list[str] = Field(default_factory=list)
+    address: str = Field(min_length=1)
+    blood_type: BloodType
+    allergies: list[str] = Field(min_length=1)
     conditions: str | None = None
     status: PatientStatus
     last_visit: date
 
-    @field_validator("first_name", "last_name")
+    @field_validator("first_name", "last_name", "phone", "address")
     @classmethod
     def required_text_must_not_be_blank(cls, value: str) -> str:
         cleaned_value = value.strip()
@@ -46,9 +46,12 @@ class PatientBase(BaseModel):
                 cleaned_allergies.append(cleaned_allergy)
                 seen_allergies.add(normalized_allergy)
 
+        if not cleaned_allergies:
+            raise ValueError("At least one allergy is required")
+
         return cleaned_allergies
 
-    @field_validator("phone", "address", "conditions")
+    @field_validator("conditions")
     @classmethod
     def optional_text_must_be_clean(cls, value: str | None) -> str | None:
         if value is None:
@@ -88,6 +91,18 @@ class PatientStatsResponse(BaseModel):
     inactive: int
     pending: int
     discharged: int
+
+
+class DashboardDistributionItem(BaseModel):
+    label: str
+    count: int
+
+
+class DashboardStatsResponse(BaseModel):
+    status_distribution: list[DashboardDistributionItem]
+    age_demographics: list[DashboardDistributionItem]
+    blood_type_distribution: list[DashboardDistributionItem]
+    top_conditions: list[DashboardDistributionItem]
 
 
 class PatientNoteCreate(BaseModel):

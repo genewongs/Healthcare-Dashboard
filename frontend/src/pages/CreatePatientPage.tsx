@@ -26,9 +26,9 @@ export function CreatePatientPage() {
   });
 
   return (
-    <Stack spacing={3}>
+    <Stack spacing={3} sx={{ minWidth: 0 }}>
       <Stack spacing={1}>
-        <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
+        <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", flexWrap: "wrap" }}>
           <CircularBackButton ariaLabel="Back to patients" to="/patients" />
           <Typography variant="h4">Create Patient</Typography>
         </Stack>

@@ -23,8 +23,16 @@ import { formatPatientStatusLabel } from "./PatientStatusChip";
 const patientStatuses: PatientStatus[] = ["active", "inactive", "pending", "discharged"];
 const bloodTypes: BloodType[] = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
-const optionalPhone = z.string().trim().max(30, "Phone must be 30 characters or fewer");
-const optionalAddress = z.string().trim().max(500, "Address must be 500 characters or fewer");
+const requiredPhone = z
+  .string()
+  .trim()
+  .min(1, "Phone is required")
+  .max(30, "Phone must be 30 characters or fewer");
+const requiredAddress = z
+  .string()
+  .trim()
+  .min(1, "Address is required")
+  .max(500, "Address must be 500 characters or fewer");
 const optionalConditions = z.string().trim().max(500, "Conditions must be 500 characters or fewer");
 
 const optionalEmail = z
@@ -35,14 +43,10 @@ const optionalEmail = z
     "Enter a valid email address",
   );
 
-const optionalDate = z
-  .string()
-  .refine((value) => value === "" || !Number.isNaN(Date.parse(value)), "Enter a valid date");
-
 const requiredDate = z
   .string()
   .trim()
-  .min(1, "Last visit is required")
+  .min(1, "Date is required")
   .refine((value) => !Number.isNaN(Date.parse(value)), "Enter a valid date");
 
 const patientFormSchema = z.object({
@@ -56,36 +60,37 @@ const patientFormSchema = z.object({
     .trim()
     .min(1, "Last name is required")
     .max(100, "Last name must be 100 characters or fewer"),
-  date_of_birth: optionalDate,
-  phone: optionalPhone,
+  date_of_birth: requiredDate,
+  phone: requiredPhone,
   email: optionalEmail,
-  address: optionalAddress,
-  blood_type: z.enum(bloodTypes, "Select a valid blood type").or(z.literal("")),
-  allergies: z.array(
-    z
-      .string()
-      .trim()
-      .min(1, "Allergy cannot be empty")
-      .max(100, "Allergy entries must be 100 characters or fewer"),
-  ),
+  address: requiredAddress,
+  blood_type: z
+    .enum(bloodTypes, "Select a valid blood type")
+    .or(z.literal(""))
+    .refine((value) => value !== "", "Blood type is required"),
+  allergies: z
+    .array(
+      z
+        .string()
+        .trim()
+        .min(1, "Allergy cannot be empty")
+        .max(100, "Allergy entries must be 100 characters or fewer"),
+    )
+    .min(1, "Add at least one allergy"),
   conditions: optionalConditions,
   status: z.enum(patientStatuses, "Select a valid status"),
   last_visit: requiredDate,
 });
 
-export type PatientFormValues = z.infer<typeof patientFormSchema>;
+export type PatientFormValues = z.input<typeof patientFormSchema>;
 
 export type PatientFormSubmitValues = Omit<
   PatientFormValues,
-  "date_of_birth" | "phone" | "email" | "address" | "blood_type" | "conditions" | "last_visit"
+  "blood_type" | "email" | "conditions"
 > & {
-  date_of_birth: string | null;
-  phone: string | null;
+  blood_type: BloodType;
   email: string | null;
-  address: string | null;
-  blood_type: BloodType | null;
   conditions: string | null;
-  last_visit: string;
 };
 
 export type PatientFormServerErrors = Partial<Record<keyof PatientFormValues, string>>;
@@ -258,11 +263,11 @@ function toSubmitValues(values: PatientFormValues): PatientFormSubmitValues {
     ...values,
     first_name: values.first_name.trim(),
     last_name: values.last_name.trim(),
-    date_of_birth: emptyToNull(values.date_of_birth),
-    phone: emptyToNull(values.phone),
+    date_of_birth: values.date_of_birth,
+    phone: values.phone.trim(),
     email: emptyToNull(values.email),
-    address: emptyToNull(values.address),
-    blood_type: values.blood_type === "" ? null : values.blood_type,
+    address: values.address.trim(),
+    blood_type: values.blood_type as BloodType,
     allergies: values.allergies,
     conditions: emptyToNull(values.conditions),
     last_visit: values.last_visit,
@@ -291,12 +296,13 @@ export function PatientForm({
   const submitLabel = mode === "create" ? "Create patient" : "Save changes";
 
   return (
-    <Card variant="outlined">
-      <CardContent>
+    <Card sx={{ maxWidth: "100%", overflow: "hidden" }} variant="outlined">
+      <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
         <Stack
           component="form"
           onSubmit={handleSubmit((values) => onSubmit(toSubmitValues(values)))}
           spacing={3}
+          sx={{ minWidth: 0 }}
         >
           <Stack spacing={1}>
             <Typography variant="h5">
@@ -311,7 +317,7 @@ export function PatientForm({
 
           <Stack spacing={2}>
             <Typography variant="h6">Personal Information</Typography>
-            <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+            <Stack direction={{ xs: "column", md: "row" }} spacing={2} sx={{ minWidth: 0 }}>
               <TextField
                 {...register("first_name")}
                 error={Boolean(
@@ -330,7 +336,7 @@ export function PatientForm({
               />
             </Stack>
 
-            <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+            <Stack direction={{ xs: "column", md: "row" }} spacing={2} sx={{ minWidth: 0 }}>
               <Controller
                 control={control}
                 name="date_of_birth"
@@ -395,7 +401,7 @@ export function PatientForm({
               />
             </Stack>
 
-            <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+            <Stack direction={{ xs: "column", md: "row" }} spacing={2} sx={{ minWidth: 0 }}>
               <TextField
                 {...register("phone")}
                 error={Boolean(fieldError(errors.phone?.message, serverFieldErrors.phone))}
@@ -425,7 +431,7 @@ export function PatientForm({
 
           <Stack spacing={2}>
             <Typography variant="h6">Medical Information</Typography>
-            <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+            <Stack direction={{ xs: "column", md: "row" }} spacing={2} sx={{ minWidth: 0 }}>
               <Controller
                 control={control}
                 name="blood_type"
@@ -438,7 +444,6 @@ export function PatientForm({
                   >
                     <InputLabel id="patient-blood-type-label">Blood type</InputLabel>
                     <Select label="Blood type" labelId="patient-blood-type-label" {...field}>
-                      <MenuItem value="">Not recorded</MenuItem>
                       {bloodTypes.map((bloodType) => (
                         <MenuItem key={bloodType} value={bloodType}>
                           {bloodType}

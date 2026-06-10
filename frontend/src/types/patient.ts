@@ -18,11 +18,11 @@ export type Patient = {
   id: number;
   first_name: string;
   last_name: string;
-  date_of_birth: string | null;
-  phone: string | null;
+  date_of_birth: string;
+  phone: string;
   email: string | null;
-  address: string | null;
-  blood_type: BloodType | null;
+  address: string;
+  blood_type: BloodType;
   allergies: string[];
   conditions: string | null;
   status: PatientStatus;
@@ -34,12 +34,12 @@ export type Patient = {
 export type PatientCreate = {
   first_name: string;
   last_name: string;
-  date_of_birth?: string | null;
-  phone?: string | null;
+  date_of_birth: string;
+  phone: string;
   email?: string | null;
-  address?: string | null;
-  blood_type?: BloodType | null;
-  allergies?: string[];
+  address: string;
+  blood_type: BloodType;
+  allergies: string[];
   conditions?: string | null;
   status: PatientStatus;
   last_visit: string;

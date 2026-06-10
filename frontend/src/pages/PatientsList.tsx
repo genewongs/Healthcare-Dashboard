@@ -23,7 +23,6 @@ import {
   formatPatientStatusLabel,
   PatientCard,
   PatientFiltersDialog,
-  PatientStatusOverview,
   type PatientAdvancedFilters,
 } from "../components/Patients";
 import type { PatientSortField } from "../types/patient";
@@ -33,7 +32,6 @@ const sortOptions: Array<{ label: string; value: PatientSortField }> = [
   { label: "First name", value: "first_name" },
   { label: "Last visit", value: "last_visit" },
   { label: "Status", value: "status" },
-  { label: "Created date", value: "created_at" },
 ];
 
 const pageSizeOptions = [5, 10, 25, 50];
@@ -156,20 +154,35 @@ export function PatientsList() {
 
   const patients = data?.items ?? [];
   const totalPages = data?.total_pages ?? 0;
+  const activeFilterCount = getAdvancedFilterCount(advancedFilters);
 
   return (
     <Stack spacing={3}>
       <PatientsHeader total={data?.total} />
-      <PatientStatusOverview />
 
       <Stack spacing={1.5}>
         <Box
           sx={{
+            alignItems: "center",
             display: "grid",
             gap: 1.5,
+            gridTemplateAreas: {
+              xs: `
+                "search search search"
+                "sort filters page"
+                "create create create"
+              `,
+              md: `
+                "search search search"
+                "sort page filters"
+                "create create create"
+              `,
+              lg: `"search sort page filters create"`,
+            },
             gridTemplateColumns: {
-              xs: "1fr 1fr",
-              md: "minmax(280px, 1fr) 170px 130px 150px auto",
+              xs: "minmax(0, 1.25fr) minmax(118px, auto) minmax(0, 0.75fr)",
+              md: "minmax(0, 1fr) 130px 166px",
+              lg: "minmax(280px, 1fr) minmax(150px, 180px) 130px 166px 174px",
             },
           }}
         >
@@ -187,11 +200,14 @@ export function PatientsList() {
                 ),
               },
             }}
-            sx={{ gridColumn: { xs: "1 / -1", md: "auto" } }}
+            sx={{
+              gridArea: "search",
+              minWidth: 0,
+            }}
             value={search}
           />
 
-          <FormControl size="small">
+          <FormControl size="small" sx={{ gridArea: "sort", minWidth: 0 }}>
             <InputLabel id="patient-sort-by-label">Sort by</InputLabel>
             <Select
               label="Sort by"
@@ -207,7 +223,48 @@ export function PatientsList() {
             </Select>
           </FormControl>
 
-          <FormControl size="small">
+          <Button
+            onClick={() => setFiltersOpen(true)}
+            startIcon={<IoFilter />}
+            sx={{
+              gridArea: "filters",
+              minHeight: 40,
+              minWidth: 0,
+              position: "relative",
+              px: { xs: 1, sm: 2 },
+              pr: activeFilterCount > 0 ? { xs: 4.5, sm: 5 } : undefined,
+              whiteSpace: "nowrap",
+            }}
+            variant="outlined"
+          >
+            More filters
+            {activeFilterCount > 0 ? (
+              <Box
+                component="span"
+                sx={{
+                  alignItems: "center",
+                  bgcolor: "primary.main",
+                  borderRadius: "999px",
+                  color: "primary.contrastText",
+                  display: "inline-flex",
+                  fontSize: 12,
+                  fontWeight: 800,
+                  height: 22,
+                  justifyContent: "center",
+                  minWidth: 22,
+                  position: "absolute",
+                  px: 0.75,
+                  right: 8,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                }}
+              >
+                {activeFilterCount}
+              </Box>
+            ) : null}
+          </Button>
+
+          <FormControl size="small" sx={{ gridArea: "page", minWidth: 0 }}>
             <InputLabel id="patient-page-size-label">Page size</InputLabel>
             <Select
               label="Page size"
@@ -223,17 +280,14 @@ export function PatientsList() {
             </Select>
           </FormControl>
 
-          <Button onClick={() => setFiltersOpen(true)} startIcon={<IoFilter />} variant="outlined">
-            More filters
-            {getAdvancedFilterCount(advancedFilters) > 0
-              ? ` (${getAdvancedFilterCount(advancedFilters)})`
-              : ""}
-          </Button>
-
           <Button
             component={RouterLink}
             startIcon={<IoAdd />}
-            sx={{ whiteSpace: "nowrap" }}
+            sx={{
+              gridArea: "create",
+              minHeight: 40,
+              whiteSpace: "nowrap",
+            }}
             to="/patients/new"
             variant="contained"
           >

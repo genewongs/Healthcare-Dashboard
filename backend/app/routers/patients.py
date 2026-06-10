@@ -97,8 +97,9 @@ def list_patients(
 
     query = db.query(Patient)
 
-    if search:
-        search_term = f"%{search.strip()}%"
+    cleaned_search = search.strip() if search else ""
+    if cleaned_search:
+        search_term = f"%{cleaned_search}%"
         query = query.filter(
             or_(
                 Patient.first_name.ilike(search_term),
@@ -130,9 +131,12 @@ def list_patients(
     sort_column = getattr(Patient, sort_by)
     if sort_order == "desc":
         sort_column = sort_column.desc()
+        secondary_sort_column = Patient.id.desc()
+    else:
+        secondary_sort_column = Patient.id.asc()
 
     patients = (
-        query.order_by(sort_column)
+        query.order_by(sort_column, secondary_sort_column)
         .offset((page - 1) * page_size)
         .limit(page_size)
         .all()
