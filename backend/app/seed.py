@@ -87,28 +87,37 @@ CITY_DATA = [
     ("Philadelphia", "PA", "19107", "Walnut Street"),
 ]
 
-BLOOD_TYPES = ["O+", "A-", "B+", "AB+", "O-", "A+", "B-", "AB-"]
-CONDITIONS = [
-    "Hypertension",
-    "Type 2 diabetes",
-    "Asthma",
-    "Coronary artery disease",
-    "Migraine",
-    "Chronic kidney disease",
-    "Hypothyroidism",
-    "Atrial fibrillation",
-    "Anxiety",
-    "COPD",
-    "Rheumatoid arthritis",
-    "Eczema",
-    "Osteoporosis",
-    "GERD",
-    "Iron deficiency anemia",
-    "Heart failure",
-    "Depression",
-    "Seasonal allergies",
-    "High cholesterol",
-    "Sleep apnea",
+BLOOD_TYPE_WEIGHTS = [
+    ("O+", 37),
+    ("A+", 31),
+    ("B+", 11),
+    ("O-", 7),
+    ("A-", 6),
+    ("AB+", 4),
+    ("B-", 3),
+    ("AB-", 1),
+]
+CONDITION_WEIGHTS = [
+    ("Hypertension", 16),
+    ("Type 2 diabetes", 13),
+    ("High cholesterol", 11),
+    ("Asthma", 9),
+    ("Seasonal allergies", 8),
+    ("Migraine", 7),
+    ("Anxiety", 6),
+    ("GERD", 6),
+    ("Hypothyroidism", 5),
+    ("COPD", 4),
+    ("Osteoporosis", 4),
+    ("Coronary artery disease", 3),
+    ("Depression", 3),
+    ("Chronic kidney disease", 2),
+    ("Rheumatoid arthritis", 2),
+    ("Atrial fibrillation", 1),
+    ("Eczema", 1),
+    ("Heart failure", 1),
+    ("Iron deficiency anemia", 1),
+    ("Sleep apnea", 1),
 ]
 ALLERGY_OPTIONS = [
     ["No known allergies"],
@@ -123,18 +132,33 @@ ALLERGY_OPTIONS = [
     ["Tree nuts"],
     ["Morphine"],
 ]
-STATUS_SEQUENCE = [
-    "active",
-    "active",
-    "active",
-    "active",
-    "active",
-    "active",
-    "pending",
-    "inactive",
-    "discharged",
-    "pending",
+STATUS_WEIGHTS = [
+    ("active", 67),
+    ("pending", 14),
+    ("inactive", 11),
+    ("discharged", 8),
 ]
+
+
+def deterministic_number(index: int, salt: int) -> int:
+    return (
+        (index + 1) * 1_103_515_245
+        + salt * 12_345
+        + (index >> 3) * 2_654_435_761
+    ) & 0x7FFFFFFF
+
+
+def weighted_choice(options: list[tuple[str, int]], index: int, salt: int) -> str:
+    total_weight = sum(weight for _, weight in options)
+    selected_weight = deterministic_number(index, salt) % total_weight
+    cumulative_weight = 0
+
+    for value, weight in options:
+        cumulative_weight += weight
+        if selected_weight < cumulative_weight:
+            return value
+
+    return options[-1][0]
 
 
 def build_patient_data(index: int) -> dict:
@@ -155,10 +179,10 @@ def build_patient_data(index: int) -> dict:
         "phone": f"{area_code}-555-{phone_suffix:04d}",
         "email": f"{first_name.lower()}.{last_name.lower()}.{index + 1}@example.com",
         "address": f"{100 + (index % 9900)} {street}, {city}, {state} {zip_code}",
-        "blood_type": BLOOD_TYPES[index % len(BLOOD_TYPES)],
+        "blood_type": weighted_choice(BLOOD_TYPE_WEIGHTS, index, salt=11),
         "allergies": ALLERGY_OPTIONS[index % len(ALLERGY_OPTIONS)],
-        "conditions": CONDITIONS[index % len(CONDITIONS)],
-        "status": STATUS_SEQUENCE[index % len(STATUS_SEQUENCE)],
+        "conditions": weighted_choice(CONDITION_WEIGHTS, index, salt=23),
+        "status": weighted_choice(STATUS_WEIGHTS, index, salt=37),
         "last_visit": last_visit,
     }
 

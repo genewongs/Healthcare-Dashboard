@@ -1,14 +1,4 @@
-import {
-  Alert,
-  Box,
-  Card,
-  CardContent,
-  CircularProgress,
-  Stack,
-  Typography,
-  useTheme,
-} from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
+import { Box, Card, CardContent, Stack, Typography, useTheme } from "@mui/material";
 import type { ReactNode } from "react";
 import {
   Bar,
@@ -23,8 +13,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { getDashboardStats } from "../../api/dashboard";
-import type { DashboardDistributionItem } from "../../types/dashboard";
+import type { DashboardDistributionItem, DashboardStats } from "../../types/dashboard";
+import { dashboardChartContainerStyles } from "./dashboardStyles";
 
 const statusLabels: Record<string, string> = {
   active: "Active",
@@ -73,14 +63,7 @@ function ChartCard({
 
 function EmptyChart() {
   return (
-    <Box
-      sx={{
-        alignItems: "center",
-        display: "flex",
-        height: 260,
-        justifyContent: "center",
-      }}
-    >
+    <Box sx={{ alignItems: "center", display: "flex", height: 260, justifyContent: "center" }}>
       <Typography color="text.secondary" variant="body2">
         No data available.
       </Typography>
@@ -103,7 +86,7 @@ function StatusDistributionChart({ data }: { data: DashboardDistributionItem[] }
   }
 
   return (
-    <Box sx={{ height: 260 }}>
+    <Box sx={dashboardChartContainerStyles}>
       <ResponsiveContainer height="100%" width="100%">
         <PieChart>
           <Pie
@@ -136,7 +119,7 @@ function AgeDemographicsChart({ data }: { data: DashboardDistributionItem[] }) {
   }
 
   return (
-    <Box sx={{ height: 260 }}>
+    <Box sx={dashboardChartContainerStyles}>
       <ResponsiveContainer height="100%" width="100%">
         <BarChart data={data} margin={{ bottom: 6, left: 8, right: 8, top: 8 }}>
           <CartesianGrid stroke={theme.palette.divider} vertical={false} />
@@ -161,7 +144,7 @@ function BloodTypeChart({ data }: { data: DashboardDistributionItem[] }) {
   }
 
   return (
-    <Box sx={{ height: 260 }}>
+    <Box sx={dashboardChartContainerStyles}>
       <ResponsiveContainer height="100%" width="100%">
         <BarChart data={data} margin={{ bottom: 6, left: 8, right: 8, top: 8 }}>
           <CartesianGrid stroke={theme.palette.divider} vertical={false} />
@@ -186,7 +169,7 @@ function TopConditionsChart({ data }: { data: DashboardDistributionItem[] }) {
   }
 
   return (
-    <Box sx={{ height: 260 }}>
+    <Box sx={dashboardChartContainerStyles}>
       <ResponsiveContainer height="100%" width="100%">
         <BarChart data={data} layout="vertical" margin={{ bottom: 8, left: 88, right: 16, top: 8 }}>
           <CartesianGrid stroke={theme.palette.divider} horizontal={false} />
@@ -210,50 +193,26 @@ function TopConditionsChart({ data }: { data: DashboardDistributionItem[] }) {
   );
 }
 
-export function DashboardAnalytics() {
-  const { data, error, isError, isLoading } = useQuery({
-    queryKey: ["dashboard-stats"],
-    queryFn: getDashboardStats,
-  });
-
-  if (isLoading) {
-    return (
-      <Box sx={{ alignItems: "center", display: "flex", minHeight: 260 }}>
-        <CircularProgress aria-label="Loading dashboard analytics" />
-      </Box>
-    );
-  }
-
-  if (isError || !data) {
-    const message = error instanceof Error ? error.message : "Unable to load dashboard analytics";
-    return <Alert severity="error">{message}</Alert>;
-  }
-
+export function DashboardAnalytics({ stats }: { stats: DashboardStats }) {
   return (
-    <Box
-      sx={{
-        display: "grid",
-        gap: 2,
-        gridTemplateColumns: { xs: "1fr", lg: "repeat(2, minmax(0, 1fr))" },
-      }}
-    >
+    <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", lg: "repeat(2, minmax(0, 1fr))" }}}>
       <ChartCard
         subtitle="Breakdown of current patient statuses"
         title="Patient status distribution"
       >
-        <StatusDistributionChart data={data.status_distribution} />
+        <StatusDistributionChart data={stats.status_distribution} />
       </ChartCard>
 
       <ChartCard subtitle="Age groups across all patients" title="Age demographics">
-        <AgeDemographicsChart data={data.age_demographics} />
+        <AgeDemographicsChart data={stats.age_demographics} />
       </ChartCard>
 
       <ChartCard subtitle="Recorded blood types across patients" title="Blood type distribution">
-        <BloodTypeChart data={data.blood_type_distribution} />
+        <BloodTypeChart data={stats.blood_type_distribution} />
       </ChartCard>
 
       <ChartCard subtitle="Most common conditions among active patients" title="Top conditions">
-        <TopConditionsChart data={data.top_conditions} />
+        <TopConditionsChart data={stats.top_conditions} />
       </ChartCard>
     </Box>
   );

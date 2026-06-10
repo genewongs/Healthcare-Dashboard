@@ -36,6 +36,7 @@ import { CircularBackButton } from "../components/Layout";
 import { PatientNotes, PatientStatusChip, PatientSummaryCard } from "../components/Patients";
 import type { Patient } from "../types/patient";
 import { calculateAge, formatDate, getPatientInitials } from "../utils/patientFormatters";
+import { patientDeleteButtonStyles, patientDetailsAvatarStyles, patientDetailsEditButtonStyles, patientFiledValueCardStyles } from "./PatientDetailPage.styles";
 
 function formatAllergies(allergies: string[]) {
   return allergies.length > 0 ? allergies.join(", ") : "None documented";
@@ -55,18 +56,7 @@ function FieldValue({
   return (
     <Stack direction="row" spacing={1.5} sx={{ alignItems: "flex-start", minWidth: 0 }}>
       <Box
-        sx={{
-          alignItems: "center",
-          bgcolor: "primary.light",
-          borderRadius: 1.5,
-          color: "primary.main",
-          display: "flex",
-          flexShrink: 0,
-          height: 28,
-          justifyContent: "center",
-          mt: 0.25,
-          width: 28,
-        }}
+        sx={patientFiledValueCardStyles}
       >
         {icon}
       </Box>
@@ -232,16 +222,7 @@ export function PatientDetailPage() {
 
         <Stack direction="row" spacing={1.5} sx={{ alignItems: "flex-start", minWidth: 0 }}>
           <Avatar
-            sx={{
-              bgcolor: "primary.light",
-              color: "primary.main",
-              flexShrink: 0,
-              fontSize: { xs: 18, sm: 24, md: 30 },
-              fontWeight: 800,
-              height: { xs: 48, sm: 64, md: 88 },
-              mt: { xs: 0.5, md: 0 },
-              width: { xs: 48, sm: 64, md: 88 },
-            }}
+            sx={patientDetailsAvatarStyles}
           >
             {getPatientInitials(patient)}
           </Avatar>
@@ -277,13 +258,7 @@ export function PatientDetailPage() {
                   aria-label={`Edit ${fullName}`}
                   color="primary"
                   component={RouterLink}
-                  sx={{
-                    border: 1,
-                    borderColor: "divider",
-                    bgcolor: "background.paper",
-                    height: { xs: 38, sm: 44, md: 48 },
-                    width: { xs: 38, sm: 44, md: 48 },
-                  }}
+                  sx={patientDetailsEditButtonStyles}
                   to={`/patients/${patient.id}/edit`}
                 >
                   <MdOutlineModeEditOutline size={22} />
@@ -292,13 +267,7 @@ export function PatientDetailPage() {
                   aria-label={`Delete ${fullName}`}
                   color="error"
                   onClick={() => setDeleteDialogOpen(true)}
-                  sx={{
-                    border: 1,
-                    borderColor: "divider",
-                    bgcolor: "background.paper",
-                    height: { xs: 38, sm: 44, md: 48 },
-                    width: { xs: 38, sm: 44, md: 48 },
-                  }}
+                  sx={patientDeleteButtonStyles}
                 >
                   <RiDeleteBinLine size={22} />
                 </IconButton>

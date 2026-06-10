@@ -28,6 +28,7 @@ import {
 } from "react-icons/io5";
 import { NavLink, Outlet } from "react-router-dom";
 import { useThemeMode } from "../../theme/themeMode";
+import { chevronIconStyles, colorModeToggleStyles, dashboardTitleIcon, headerAvatarIconStyles } from "./AppLayout.styles";
 
 const expandedDrawerWidth = 240;
 const collapsedDrawerWidth = 72;
@@ -149,16 +150,7 @@ export function AppLayout() {
           ) : null}
           <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
             <Box
-              sx={{
-                alignItems: "center",
-                bgcolor: "primary.light",
-                borderRadius: 2,
-                color: "primary.main",
-                display: "flex",
-                height: 36,
-                justifyContent: "center",
-                width: 36,
-              }}
+              sx={dashboardTitleIcon}
             >
               <IoShieldCheckmarkOutline size={22} />
             </Box>
@@ -171,31 +163,12 @@ export function AppLayout() {
               <IconButton
                 aria-label={mode === "dark" ? "Switch to light mode" : "Switch to dark mode"}
                 onClick={toggleMode}
-                sx={{
-                  bgcolor: "background.paper",
-                  border: 1,
-                  borderColor: "divider",
-                  color: "primary.main",
-                  height: 38,
-                  width: 38,
-                  "&:hover": {
-                    bgcolor: "primary.light",
-                  },
-                }}
+                sx={colorModeToggleStyles}
               >
                 {mode === "dark" ? <IoSunny /> : <IoMoon />}
               </IconButton>
             </Tooltip>
-            <Avatar
-              sx={{
-                bgcolor: "primary.main",
-                color: "primary.contrastText",
-                fontSize: 14,
-                fontWeight: 800,
-                height: 36,
-                width: 36,
-              }}
-            >
+            <Avatar sx={headerAvatarIconStyles}>
               GW
             </Avatar>
             <Box sx={{ display: { xs: "none", sm: "block" } }}>

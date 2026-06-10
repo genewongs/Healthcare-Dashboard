@@ -12,10 +12,7 @@ export function CircularBackButton({ ariaLabel = "Go back", to }: CircularBackBu
     <IconButton
       aria-label={ariaLabel}
       component={RouterLink}
-      sx={{
-        color: "primary.main",
-        p: 0,
-      }}
+      sx={{ color: "primary.main", p: 0 }}
       to={to}
     >
       <IoArrowBackCircleOutline size={30} />

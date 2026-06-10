@@ -26,6 +26,12 @@ import {
   type PatientAdvancedFilters,
 } from "../components/Patients";
 import type { PatientSortField } from "../types/patient";
+import {
+  patientFilterBadgeStyles,
+  patientFilterButtonStyles,
+  patientListContentStyles,
+  patientListToolbarStyles
+} from "./PatientsList.styles";
 
 const sortOptions: Array<{ label: string; value: PatientSortField }> = [
   { label: "Last name", value: "last_name" },
@@ -161,31 +167,7 @@ export function PatientsList() {
       <PatientsHeader total={data?.total} />
 
       <Stack spacing={1.5}>
-        <Box
-          sx={{
-            alignItems: "center",
-            display: "grid",
-            gap: 1.5,
-            gridTemplateAreas: {
-              xs: `
-                "search search search"
-                "sort filters page"
-                "create create create"
-              `,
-              md: `
-                "search search search"
-                "sort page filters"
-                "create create create"
-              `,
-              lg: `"search sort page filters create"`,
-            },
-            gridTemplateColumns: {
-              xs: "minmax(0, 1.25fr) minmax(118px, auto) minmax(0, 0.75fr)",
-              md: "minmax(0, 1fr) 130px 166px",
-              lg: "minmax(280px, 1fr) minmax(150px, 180px) 130px 166px 174px",
-            },
-          }}
-        >
+        <Box sx={patientListToolbarStyles}>
           <TextField
             label="Search patients"
             onChange={(event) => setSearch(event.target.value)}
@@ -200,10 +182,7 @@ export function PatientsList() {
                 ),
               },
             }}
-            sx={{
-              gridArea: "search",
-              minWidth: 0,
-            }}
+            sx={{ gridArea: "search", minWidth: 0 }}
             value={search}
           />
 
@@ -226,39 +205,12 @@ export function PatientsList() {
           <Button
             onClick={() => setFiltersOpen(true)}
             startIcon={<IoFilter />}
-            sx={{
-              gridArea: "filters",
-              minHeight: 40,
-              minWidth: 0,
-              position: "relative",
-              px: { xs: 1, sm: 2 },
-              pr: activeFilterCount > 0 ? { xs: 4.5, sm: 5 } : undefined,
-              whiteSpace: "nowrap",
-            }}
+            sx={patientFilterButtonStyles(activeFilterCount > 0)}
             variant="outlined"
           >
             More filters
             {activeFilterCount > 0 ? (
-              <Box
-                component="span"
-                sx={{
-                  alignItems: "center",
-                  bgcolor: "primary.main",
-                  borderRadius: "999px",
-                  color: "primary.contrastText",
-                  display: "inline-flex",
-                  fontSize: 12,
-                  fontWeight: 800,
-                  height: 22,
-                  justifyContent: "center",
-                  minWidth: 22,
-                  position: "absolute",
-                  px: 0.75,
-                  right: 8,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                }}
-              >
+              <Box component="span" sx={patientFilterBadgeStyles}>
                 {activeFilterCount}
               </Box>
             ) : null}
@@ -283,11 +235,7 @@ export function PatientsList() {
           <Button
             component={RouterLink}
             startIcon={<IoAdd />}
-            sx={{
-              gridArea: "create",
-              minHeight: 40,
-              whiteSpace: "nowrap",
-            }}
+            sx={{ gridArea: "create", minHeight: 40, whiteSpace: "nowrap" }}
             to="/patients/new"
             variant="contained"
           >
@@ -313,13 +261,7 @@ export function PatientsList() {
       ) : null}
 
       <Box sx={{ minHeight: 260, position: "relative" }}>
-        <Box
-          sx={{
-            opacity: isFetching ? 0.72 : 1,
-            transform: isFetching ? "translateY(2px)" : "translateY(0)",
-            transition: "opacity 180ms ease, transform 180ms ease",
-          }}
-        >
+        <Box sx={patientListContentStyles(isFetching)}>
           {patients.length === 0 ? (
             <Alert severity="info">No patients found.</Alert>
           ) : (
@@ -485,7 +427,7 @@ function PatientsHeader({ total }: { total?: number }) {
       }}
     >
       <Box>
-        <Typography sx={{ fontSize: { xs: 42, sm: 48, md: 34 } }} variant="h4">
+        <Typography sx={{fontSize: { xs: 42, sm: 48, md: 34 }}} variant="h4">
           Patients
         </Typography>
         <Typography color="text.secondary" variant="body1">
