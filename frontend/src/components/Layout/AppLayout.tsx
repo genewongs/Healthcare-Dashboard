@@ -196,14 +196,14 @@ export function AppLayout() {
                 width: 36,
               }}
             >
-              RN
+              GW
             </Avatar>
             <Box sx={{ display: { xs: "none", sm: "block" } }}>
               <Typography sx={{ fontWeight: 750, lineHeight: 1.1 }} variant="body2">
                 Care Team
               </Typography>
               <Typography color="text.secondary" sx={{ lineHeight: 1.1 }} variant="caption">
-                RN
+                GW
               </Typography>
             </Box>
           </Stack>

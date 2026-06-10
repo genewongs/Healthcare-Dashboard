@@ -82,6 +82,14 @@ class PatientListResponse(BaseModel):
     total_pages: int
 
 
+class PatientStatsResponse(BaseModel):
+    total: int
+    active: int
+    inactive: int
+    pending: int
+    discharged: int
+
+
 class PatientNoteCreate(BaseModel):
     timestamp: datetime | None = None
     content: str = Field(min_length=1, max_length=2000)

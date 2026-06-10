@@ -3,7 +3,7 @@ from math import ceil
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status as http_status
-from sqlalchemy import or_
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -16,6 +16,7 @@ from app.schemas import (
     PatientNoteUpdate,
     PatientResponse,
     PatientStatus,
+    PatientStatsResponse,
     PatientSummaryResponse,
     PatientUpdate,
 )
@@ -143,6 +144,22 @@ def list_patients(
         page=page,
         page_size=page_size,
         total_pages=ceil(total / page_size) if total else 0,
+    )
+
+
+@router.get("/stats", response_model=PatientStatsResponse)
+def get_patient_stats(db: Session = Depends(get_db)) -> PatientStatsResponse:
+    status_counts = dict(
+        db.query(Patient.status, func.count(Patient.id)).group_by(Patient.status).all()
+    )
+    total = sum(status_counts.values())
+
+    return PatientStatsResponse(
+        total=total,
+        active=status_counts.get("active", 0),
+        inactive=status_counts.get("inactive", 0),
+        pending=status_counts.get("pending", 0),
+        discharged=status_counts.get("discharged", 0),
     )
 
 

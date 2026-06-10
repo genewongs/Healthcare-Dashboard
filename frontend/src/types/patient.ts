@@ -68,6 +68,14 @@ export type PaginatedPatients = {
   total_pages: number;
 };
 
+export type PatientStats = {
+  total: number;
+  active: number;
+  inactive: number;
+  pending: number;
+  discharged: number;
+};
+
 export type PatientNote = {
   id: number;
   patient_id: number;

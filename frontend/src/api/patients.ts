@@ -7,6 +7,7 @@ import type {
   PatientNote,
   PatientNoteCreate,
   PatientNoteUpdate,
+  PatientStats,
   PatientSummary,
   PatientUpdate,
 } from "../types/patient";
@@ -29,6 +30,10 @@ export function getPatients(params: PatientListParams = {}) {
 
 export function getPatientById(id: number) {
   return apiRequest<Patient>(`/patients/${id}`);
+}
+
+export function getPatientStats() {
+  return apiRequest<PatientStats>("/patients/stats");
 }
 
 export function createPatient(patient: PatientCreate) {

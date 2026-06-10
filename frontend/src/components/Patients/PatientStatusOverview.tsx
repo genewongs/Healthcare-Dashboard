@@ -7,7 +7,7 @@ import {
   IoPeopleOutline,
   IoTimeOutline,
 } from "react-icons/io5";
-import { getPatients } from "../../api/patients";
+import { getPatientStats } from "../../api/patients";
 
 type StatusMetric = {
   accent: "primary" | "success" | "warning" | "error";
@@ -16,25 +16,6 @@ type StatusMetric = {
   label: string;
   value: number;
 };
-
-async function getStatusOverview() {
-  const [allPatients, activePatients, pendingPatients, inactivePatients, dischargedPatients] =
-    await Promise.all([
-      getPatients({ page: 1, page_size: 1 }),
-      getPatients({ page: 1, page_size: 1, status: "active" }),
-      getPatients({ page: 1, page_size: 1, status: "pending" }),
-      getPatients({ page: 1, page_size: 1, status: "inactive" }),
-      getPatients({ page: 1, page_size: 1, status: "discharged" }),
-    ]);
-
-  return {
-    active: activePatients.total,
-    discharged: dischargedPatients.total,
-    inactive: inactivePatients.total,
-    pending: pendingPatients.total,
-    total: allPatients.total,
-  };
-}
 
 function getPercentage(count: number, total: number) {
   if (!total) {
@@ -84,7 +65,7 @@ function StatusMetricCard({ metric }: { metric: StatusMetric }) {
 export function PatientStatusOverview() {
   const { data, error, isError, isLoading } = useQuery({
     queryKey: ["patient-status-overview"],
-    queryFn: getStatusOverview,
+    queryFn: getPatientStats,
   });
 
   if (isLoading) {

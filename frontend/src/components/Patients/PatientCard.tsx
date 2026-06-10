@@ -2,46 +2,12 @@ import { Avatar, Box, Card, CardActionArea, CardContent, Stack, Typography } fro
 import { IoCallOutline, IoCalendarOutline, IoEllipsisVertical } from "react-icons/io5";
 import { Link as RouterLink } from "react-router-dom";
 import type { Patient } from "../../types/patient";
+import { calculateAge, formatDate, getPatientInitials } from "../../utils/patientFormatters";
 import { PatientStatusChip } from "./PatientStatusChip";
 
 type PatientCardProps = {
   patient: Patient;
 };
-
-function calculateAge(dateOfBirth: string | null) {
-  if (!dateOfBirth) {
-    return "Unknown";
-  }
-
-  const birthDate = new Date(dateOfBirth);
-  const today = new Date();
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const hasHadBirthdayThisYear =
-    today.getMonth() > birthDate.getMonth() ||
-    (today.getMonth() === birthDate.getMonth() && today.getDate() >= birthDate.getDate());
-
-  if (!hasHadBirthdayThisYear) {
-    age -= 1;
-  }
-
-  return `${age}`;
-}
-
-function formatDate(date: string | null) {
-  if (!date) {
-    return "Not recorded";
-  }
-
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(new Date(date));
-}
-
-function getInitials(patient: Patient) {
-  return `${patient.first_name.charAt(0)}${patient.last_name.charAt(0)}`.toUpperCase();
-}
 
 export function PatientCard({ patient }: PatientCardProps) {
   const fullName = `${patient.first_name} ${patient.last_name}`;
@@ -73,7 +39,7 @@ export function PatientCard({ patient }: PatientCardProps) {
                   width: { xs: 72, sm: 56 },
                 }}
               >
-                {getInitials(patient)}
+                {getPatientInitials(patient)}
               </Avatar>
               <Stack spacing={{ xs: 1, sm: 0.75 }} sx={{ minWidth: 0 }}>
                 <Typography

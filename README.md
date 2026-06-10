@@ -19,6 +19,7 @@ The app focuses on the core assessment requirements: patient CRUD, search/filter
 - The frontend keeps API calls in `src/api`, shared types in `src/types`, and reusable UI components under `src/components`.
 - React Query owns frontend server state for fetching, cache invalidation, and mutation refreshes.
 - The frontend includes ESLint and Prettier for TypeScript linting and formatting checks.
+- Patient status visualization uses a dedicated aggregate endpoint instead of multiple list requests.
 
 ## Run With Docker
 
@@ -82,6 +83,7 @@ Health:
 Patients:
 
 - `GET /patients`
+- `GET /patients/stats`
 - `GET /patients/{id}`
 - `POST /patients`
 - `PUT /patients/{id}`

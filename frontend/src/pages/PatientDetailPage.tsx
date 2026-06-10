@@ -35,37 +35,7 @@ import { deletePatient, getPatientById } from "../api/patients";
 import { CircularBackButton } from "../components/Layout";
 import { PatientNotes, PatientStatusChip, PatientSummaryCard } from "../components/Patients";
 import type { Patient } from "../types/patient";
-
-function calculateAge(dateOfBirth: string | null) {
-  if (!dateOfBirth) {
-    return "Unknown";
-  }
-
-  const birthDate = new Date(dateOfBirth);
-  const today = new Date();
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const hasHadBirthdayThisYear =
-    today.getMonth() > birthDate.getMonth() ||
-    (today.getMonth() === birthDate.getMonth() && today.getDate() >= birthDate.getDate());
-
-  if (!hasHadBirthdayThisYear) {
-    age -= 1;
-  }
-
-  return `${age}`;
-}
-
-function formatDate(date: string | null) {
-  if (!date) {
-    return "Not recorded";
-  }
-
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(new Date(date));
-}
+import { calculateAge, formatDate, getPatientInitials } from "../utils/patientFormatters";
 
 function formatAllergies(allergies: string[]) {
   return allergies.length > 0 ? allergies.join(", ") : "None documented";
@@ -151,10 +121,6 @@ function PatientSection({
       </CardContent>
     </Card>
   );
-}
-
-function getInitials(patient: Patient) {
-  return `${patient.first_name.charAt(0)}${patient.last_name.charAt(0)}`.toUpperCase();
 }
 
 export function PatientDetailPage() {
@@ -277,7 +243,7 @@ export function PatientDetailPage() {
               width: { xs: 48, sm: 64, md: 88 },
             }}
           >
-            {getInitials(patient)}
+            {getPatientInitials(patient)}
           </Avatar>
           <Stack spacing={1} sx={{ flexGrow: 1, minWidth: 0 }}>
             <Stack
