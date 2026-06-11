@@ -78,7 +78,7 @@ function StatusDistributionChart({ data }: { data: DashboardDistributionItem[] }
     theme.palette.success.main,
     theme.palette.warning.main,
     theme.palette.error.main,
-    theme.palette.divider,
+    theme.palette.primary.dark,
   ];
 
   if (!total) {
